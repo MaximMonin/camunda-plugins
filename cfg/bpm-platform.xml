@@ -66,6 +66,10 @@
            <property name="administratorFirstName">Admin</property>
            <property name="administratorLastName">Admin</property>
            <property name="administratorEmail">admin@gmail.com</property>
+           <property name="workerUserName">camunda</property>
+           <property name="workerPassword">camunda</property>
+           <property name="workerFirstName">camunda</property>
+           <property name="workerLastName">camunda</property>
         </properties>
       </plugin>
 

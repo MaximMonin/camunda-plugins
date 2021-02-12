@@ -40,10 +40,16 @@ public class AdministrativeUserPlugin extends AbstractProcessEnginePlugin {
   protected String administratorFirstName;
   protected String administratorLastName;
   protected String administratorEmail;
+  protected String workerUserName;
+  protected String workerPassword;
+  protected String workerFirstName;
+  protected String workerLastName;
+  protected IdentityService identityService;
+  protected AuthorizationService authorizationService;
 
   public void postProcessEngineBuild(ProcessEngine engine) {
-
-      final IdentityService identityService = engine.getIdentityService();
+      identityService = engine.getIdentityService();
+      authorizationService = engine.getAuthorizationService();
 
       // If the Identity Service is Read Only then do not create a admin user
       if(identityService.isReadOnly()) {
@@ -55,40 +61,62 @@ public class AdministrativeUserPlugin extends AbstractProcessEnginePlugin {
       if (administratorUserName == null || administratorUserName.length()==0){
         throw new RuntimeException("Administrator User Plugin not configured correctly: Username required");
       }
-
-      // Check if the provided Admin username is currently in the system
-      // If it is, then no need to go further.
-      User singleResult = identityService.createUserQuery().userId(administratorUserName).singleResult();
-      if (singleResult != null) {
-        LOGGER.info("Admin user already exists, no need to create a Admin user");
-        return;
-      } else {
-        LOGGER.info("Admin user does not currently exist");
-      }
-
-      // If the Admin username does not exist, then continue to check the additional params
       // Check for Password param
       if (administratorPassword == null || administratorPassword.length()==0){
         throw new RuntimeException("Administrator User Plugin not configured correctly: Password required");
       }
-
       // Check for First Name param
       if (administratorFirstName == null || administratorFirstName.length()==0){
         throw new RuntimeException("Administrator User Plugin not configured correctly: First Name required");
       }
-
       // Check for Last Name param
       if (administratorLastName == null || administratorLastName.length()==0){
         throw new RuntimeException("Administrator User Plugin not configured correctly: Last Name required");
       }
-
       // Check for Email param
       if (administratorEmail == null || administratorEmail.length()==0){
         throw new RuntimeException("Administrator User Plugin not configured correctly: Email required");
       }
+      // Ensure Username Param was provided
+      if (workerUserName == null || workerUserName.length()==0){
+        throw new RuntimeException("Administrator User Plugin not configured correctly: Worker Username required");
+      }
+      // Check for Password param
+      if (workerPassword == null || workerPassword.length()==0){
+        throw new RuntimeException("Administrator User Plugin not configured correctly: Worker Password required");
+      }
+      // Check for First Name param
+      if (workerFirstName == null || workerFirstName.length()==0){
+        throw new RuntimeException("Administrator User Plugin not configured correctly: Worker First Name required");
+      }
+      // Check for Last Name param
+      if (workerLastName == null || workerLastName.length()==0){
+        throw new RuntimeException("Administrator User Plugin not configured correctly: Worker Last Name required");
+      }
 
-      LOGGER.info("Generating Admin user and Admin");
-
+      // Check if the provided Admin username is currently in the system
+      User adminResult = identityService.createUserQuery().userId(administratorUserName).singleResult();
+      if (adminResult != null) {
+        LOGGER.info("Admin user already exists, no need to create a Admin user");
+      } else {
+        LOGGER.info("Admin user does not currently exist");
+        LOGGER.info("Generating Admin user and Admin group");
+        CreateAdminUser (administratorUserName, administratorPassword, administratorFirstName, administratorLastName, administratorEmail);
+        LOGGER.info("Added Admin user to camunda-admin group");
+      }
+      // Check if the provided Worker username is currently in the system
+      User workerResult = identityService.createUserQuery().userId(workerUserName).singleResult();
+      if (workerResult != null) {
+        LOGGER.info("Worker user already exists, no need to create a worker user");
+      } else {
+        LOGGER.info("Worker user does not currently exist");
+        LOGGER.info("Generating worker user");
+        CreateAdminUser (workerUserName, workerPassword, workerFirstName, workerLastName, "");
+        LOGGER.info("Added worker user to camunda-admin group");
+      }
+    }
+    public void CreateAdminUser (String administratorUserName, String administratorPassword, 
+                                 String administratorFirstName, String administratorLastName, String administratorEmail) {
       // Generate the Admin user based on the plugin's paramerters in the bpm-platform.xml file
       User user = identityService.newUser(administratorUserName);
       user.setFirstName(administratorFirstName);
@@ -96,9 +124,6 @@ public class AdministrativeUserPlugin extends AbstractProcessEnginePlugin {
       user.setPassword(administratorPassword);
       user.setEmail(administratorEmail);
       identityService.saveUser(user);
-
-
-      final AuthorizationService authorizationService = engine.getAuthorizationService();
 
       LOGGER.info("Creating the camunda admin group");
       // create Administrator Group
@@ -121,8 +146,6 @@ public class AdministrativeUserPlugin extends AbstractProcessEnginePlugin {
           authorizationService.saveAuthorization(userAdminAuth);
         }
       }
-
-      LOGGER.info("Adding Admin user to camunda-admin group");
       identityService.createMembership(administratorUserName, "camunda-admin");
     }
 
@@ -161,4 +184,31 @@ public class AdministrativeUserPlugin extends AbstractProcessEnginePlugin {
       this.administratorEmail = email;
     }
 
+    /**
+     * @param username the worker
+     */
+    public void setWorkerUserName(String username) {
+      this.workerUserName = username;
+    }
+
+    /**
+     * @param password the worker
+     */
+    public void setWorkerPassword(String password) {
+      this.workerPassword = password;
+    }
+
+    /**
+     * @param username the workers's first name
+     */
+    public void setWorkerFirstName(String firstname) {
+      this.workerFirstName = firstname;
+    }
+
+    /**
+     * @param lastname the workers's lastname
+     */
+    public void setWorkerLastName(String lastname) {
+      this.workerLastName = lastname;
+    }
   }
