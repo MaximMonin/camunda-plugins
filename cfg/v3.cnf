@@ -1,0 +1,12 @@
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = camunda
+DNS.2 = camunda-gateway
+DNS.3 = camunda-engine1
+DNS.4 = camunda-engine2
+DNS.5 = camunda1
+DNS.6 = camunda2

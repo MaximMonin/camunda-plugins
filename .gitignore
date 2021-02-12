@@ -1,0 +1,10 @@
+/db/*
+/dbreplica/*
+/redis/*
+/logs/*
+/cfg/ssl/*
+.env
+camunda.bkp
+/java/camunda-incident-plugin/target/*
+/java/camunda-administrative-user-plugin/target/*
+/java/camunda-process-end-plugin/target/*

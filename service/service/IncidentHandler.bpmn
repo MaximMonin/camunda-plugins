@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0tvi7bp" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Service.IncidentHandler" name="Service: Incident Handler" isExecutable="true" camunda:jobPriority="5" camunda:historyTimeToLive="14" camunda:taskPriority="5">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0bg1mla</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="ResultOK" name="Ok">
+      <bpmn:incoming>Flow_1uwajiz</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="resource.Lock" name="resource.Lock (Incident, 1sec)" camunda:asyncBefore="true" camunda:jobPriority="0" camunda:type="external" camunda:topic="InternalService" camunda:taskPriority="0">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="method">resource.Lock</camunda:inputParameter>
+          <camunda:inputParameter name="params">{
+  "key": "Incident",
+  "timeout": 1
+}</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0bg1mla</bpmn:incoming>
+      <bpmn:outgoing>Flow_0w5dz4b</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0bg1mla" sourceRef="StartEvent_1" targetRef="resource.Lock" />
+    <bpmn:serviceTask id="telegramSend" name="telegram (message, prodChannel)" camunda:asyncBefore="true" camunda:type="external" camunda:topic="InternalService">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="method">telegram</camunda:inputParameter>
+          <camunda:inputParameter name="params">{
+  "chat_id": "yourProdChannel",
+  "parse_mode": "HTML"
+}</camunda:inputParameter>
+          <camunda:inputParameter name="message">
+            <camunda:script scriptFormat="groovy">message = "&lt;b&gt;Incident!&lt;/b&gt;&lt;pre&gt;Process: ";
+if (incident.processKey.indexOf(':') &gt; 0) {
+  message = message + incident.processKey.substring(0, incident.processKey.indexOf(':'));
+}
+else {
+  message = message + incident.processKey;
+}
+link = "https://" + env.prop("server").toString().replaceAll('"','') + "/camunda/app/cockpit/default/#/process-instance/" + incident.processId;
+message = message + "&lt;/pre&gt;&lt;a href='" + link + "'&gt;" + link + "&lt;/a&gt;&lt;pre&gt; &lt;/pre&gt;"
+text = incident.message.take(500);
+message.concat(text);</camunda:script>
+          </camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_15vpfc4</bpmn:incoming>
+      <bpmn:outgoing>Flow_1uwajiz</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="telegram-error" name="Error" attachedToRef="telegramSend">
+      <bpmn:outgoing>Flow_19yv98b</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1d6aulp" errorRef="Error_15u4hr9" camunda:errorMessageVariable="error" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_1uwajiz" sourceRef="telegramSend" targetRef="ResultOK" />
+    <bpmn:sequenceFlow id="Flow_19yv98b" sourceRef="telegram-error" targetRef="IncidentHandler-error" />
+    <bpmn:serviceTask id="enviroment.Get" name="environment.Get" camunda:asyncBefore="true" camunda:jobPriority="0" camunda:type="external" camunda:topic="InternalService">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="method">environment.Get</camunda:inputParameter>
+          <camunda:outputParameter name="env">${result}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0w5dz4b</bpmn:incoming>
+      <bpmn:outgoing>Flow_1olcao2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0w5dz4b" sourceRef="resource.Lock" targetRef="enviroment.Get" />
+    <bpmn:endEvent id="IncidentHandler-error" name="Error">
+      <bpmn:incoming>Flow_19yv98b</bpmn:incoming>
+      <bpmn:incoming>Flow_0s87mmm</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gateway_1hwwxko" default="Flow_15vpfc4">
+      <bpmn:incoming>Flow_1olcao2</bpmn:incoming>
+      <bpmn:outgoing>Flow_15vpfc4</bpmn:outgoing>
+      <bpmn:outgoing>Flow_03b7bi3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1olcao2" sourceRef="enviroment.Get" targetRef="Gateway_1hwwxko" />
+    <bpmn:sequenceFlow id="Flow_15vpfc4" sourceRef="Gateway_1hwwxko" targetRef="telegramSend" />
+    <bpmn:serviceTask id="telegramSend2" name="telegram (message, dev&#38;stage channel)" camunda:asyncBefore="true" camunda:type="external" camunda:topic="InternalService">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="method">telegram</camunda:inputParameter>
+          <camunda:inputParameter name="params">{
+  "chat_id": "yourDevChannel",  
+  "parse_mode": "HTML"
+}</camunda:inputParameter>
+          <camunda:inputParameter name="message">
+            <camunda:script scriptFormat="groovy">message = "&lt;b&gt;Incident! (Environment: " + env.prop("env").toString().replaceAll ('"','') + ")&lt;/b&gt;&lt;pre&gt;Process: ";
+if (incident.processKey.indexOf(':') &gt; 0) {
+  message = message + incident.processKey.substring(0, incident.processKey.indexOf(':'));
+}
+else {
+  message = message + incident.processKey;
+}
+link = "https://" + env.prop("server").toString().replaceAll('"','') + "/camunda/app/cockpit/default/#/process-instance/" + incident.processId;
+message = message + "&lt;/pre&gt;&lt;a href='" + link + "'&gt;" + link + "&lt;/a&gt;&lt;pre&gt; &lt;/pre&gt;"
+text = incident.message.take(500);
+message.concat(text);</camunda:script>
+          </camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_03b7bi3</bpmn:incoming>
+      <bpmn:outgoing>Flow_04qt5lp</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="telegram-error2" name="Error" attachedToRef="telegramSend2">
+      <bpmn:outgoing>Flow_0s87mmm</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0f23885" errorRef="Error_15u4hr9" camunda:errorMessageVariable="error" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_0s87mmm" sourceRef="telegram-error2" targetRef="IncidentHandler-error" />
+    <bpmn:sequenceFlow id="Flow_03b7bi3" name="env != &#34;prod&#34;" sourceRef="Gateway_1hwwxko" targetRef="telegramSend2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${env.prop("env").toString().replaceAll ('"','') != "prod"}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="ResultOK2" name="Ok">
+      <bpmn:incoming>Flow_04qt5lp</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_04qt5lp" sourceRef="telegramSend2" targetRef="ResultOK2" />
+    <bpmn:textAnnotation id="TextAnnotation_13u8llo">
+      <bpmn:text>incident (id, processId, processKey, message)</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1aubfqz" sourceRef="StartEvent_1" targetRef="TextAnnotation_13u8llo" />
+  </bpmn:process>
+  <bpmn:error id="Error_15u4hr9" name="telegram-error" errorCode="telegram-error" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Service.IncidentHandler">
+      <bpmndi:BPMNEdge id="Flow_04qt5lp_di" bpmnElement="Flow_04qt5lp">
+        <di:waypoint x="890" y="470" />
+        <di:waypoint x="942" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03b7bi3_di" bpmnElement="Flow_03b7bi3">
+        <di:waypoint x="660" y="202" />
+        <di:waypoint x="660" y="470" />
+        <di:waypoint x="790" y="470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="588" y="293" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0s87mmm_di" bpmnElement="Flow_0s87mmm">
+        <di:waypoint x="840" y="412" />
+        <di:waypoint x="840" y="330" />
+        <di:waypoint x="942" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15vpfc4_di" bpmnElement="Flow_15vpfc4">
+        <di:waypoint x="685" y="177" />
+        <di:waypoint x="790" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1olcao2_di" bpmnElement="Flow_1olcao2">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="635" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0w5dz4b_di" bpmnElement="Flow_0w5dz4b">
+        <di:waypoint x="380" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19yv98b_di" bpmnElement="Flow_19yv98b">
+        <di:waypoint x="840" y="235" />
+        <di:waypoint x="840" y="330" />
+        <di:waypoint x="942" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1uwajiz_di" bpmnElement="Flow_1uwajiz">
+        <di:waypoint x="890" y="177" />
+        <di:waypoint x="942" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0bg1mla_di" bpmnElement="Flow_0bg1mla">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="280" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0fhgxca_di" bpmnElement="ResultOK">
+        <dc:Bounds x="942" y="159" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="953" y="202" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1j5pev5_di" bpmnElement="resource.Lock">
+        <dc:Bounds x="280" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_19f7v4j_di" bpmnElement="telegramSend">
+        <dc:Bounds x="790" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ntn7yv_di" bpmnElement="enviroment.Get">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0qnlm6j_di" bpmnElement="IncidentHandler-error">
+        <dc:Bounds x="942" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="947" y="355" width="26" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1hwwxko_di" bpmnElement="Gateway_1hwwxko" isMarkerVisible="true">
+        <dc:Bounds x="635" y="152" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0g46h0i_di" bpmnElement="telegramSend2">
+        <dc:Bounds x="790" y="430" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_129oq9g_di" bpmnElement="ResultOK2">
+        <dc:Bounds x="942" y="452" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="953" y="495" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_13u8llo_di" bpmnElement="TextAnnotation_13u8llo">
+        <dc:Bounds x="220" y="40" width="100" height="68" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1mutfzi_di" bpmnElement="telegram-error2">
+        <dc:Bounds x="822" y="412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="797" y="403" width="26" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1k8ron0_di" bpmnElement="telegram-error">
+        <dc:Bounds x="822" y="199" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="797" y="233" width="26" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_1aubfqz_di" bpmnElement="Association_1aubfqz">
+        <di:waypoint x="206" y="162" />
+        <di:waypoint x="238" y="108" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

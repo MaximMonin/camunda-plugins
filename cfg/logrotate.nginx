@@ -1,0 +1,28 @@
+/var/log/nginx/access.log {
+        daily
+        dateext
+        missingok
+        rotate 30
+        compress
+        delaycompress
+        notifempty
+        create 0640 nginx nginx
+        sharedscripts
+        postrotate
+                [ -s /run/nginx.pid ] && kill -USR1 `cat /run/nginx.pid`
+        endscript
+}
+/var/log/nginx/error.log {
+        daily
+        dateext
+        missingok
+        rotate 30
+        compress
+        delaycompress
+        notifempty
+        create 0640 nginx nginx
+        sharedscripts
+        postrotate
+                [ -s /run/nginx.pid ] && kill -USR1 `cat /run/nginx.pid`
+        endscript
+}
