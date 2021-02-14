@@ -55,7 +55,7 @@ services:
       - DB_URL=jdbc:postgresql://${DB_PORT}/camunda
       - DB_USERNAME=camunda
       - DB_PASSWORD=camunda
-      - DB_CONN_MAXACTIVE=50
+      - DB_CONN_MAXACTIVE=100
       - WAIT_FOR=${DB_PORT}
       - WAIT_FOR_TIMEOUT=60
       - TZ=Europe/Kiev
@@ -91,7 +91,7 @@ services:
       - DB_URL=jdbc:postgresql://${DB_PORT}/camunda
       - DB_USERNAME=camunda
       - DB_PASSWORD=camunda
-      - DB_CONN_MAXACTIVE=50
+      - DB_CONN_MAXACTIVE=100
       - WAIT_FOR=${DB_PORT}
       - WAIT_FOR_TIMEOUT=60
       - TZ=Europe/Kiev
@@ -118,7 +118,7 @@ services:
       - workerId=worker1
       - CamundaPass=$CAMUNDA_PASSWORD
       - RedisPass=$REDIS_PASSWORD
-      - JobsToActivate=10
+      - JobsToActivate=200
       - LongPolling=60000
       - TaskType=InternalService
       # rotate logfile days
@@ -155,7 +155,7 @@ services:
       - workerId=worker2
       - CamundaPass=$CAMUNDA_PASSWORD
       - RedisPass=$REDIS_PASSWORD
-      - JobsToActivate=10
+      - JobsToActivate=200
       - LongPolling=60000
       - TaskType=InternalService
       # rotate logfile days
@@ -180,7 +180,7 @@ services:
     container_name: camunda-plugins-db-$ENVIRONMENT
     ports:
       - $DB_PORT:5432
-    command: postgres -c max_connections=200
+    command: postgres -c max_connections=400
                       -c shared_buffers=1GB
                       -c effective_cache_size=1536MB
                       -c maintenance_work_mem=256MB

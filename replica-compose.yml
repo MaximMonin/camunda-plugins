@@ -16,7 +16,7 @@ services:
         echo 'Starting replication...'
         sleep 10
         pg_basebackup -d postgresql://camunda@${REPLICA_PORT}/camunda -D /var/lib/postgresql/data -Fp -Xs -P -R -w -C -S replica_db
-        exec docker-entrypoint.sh postgres -c max_connections=200 -c shared_buffers=1GB -c effective_cache_size=1536MB -c maintenance_work_mem=256MB -c max_locks_per_transaction=2000
+        exec docker-entrypoint.sh postgres -c max_connections=400 -c shared_buffers=1GB -c effective_cache_size=1536MB -c maintenance_work_mem=256MB -c max_locks_per_transaction=2000
     volumes:
       - ./dbreplica:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
