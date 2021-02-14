@@ -65,6 +65,8 @@ const ServiceRules = [
    // Queries to redis cluster
    { method: "resource.Lock", rules: '', timeout: 60},
    { method: "resource.Unlock", rules: ''},
+   // Special method to do nothing, just return back. Useful for engine test
+   { method: "null", rules: ''},
 
    // get enviroment variables for current server
    { method: "environment.Get", rules: '', resultReturn: 'env'},
@@ -186,16 +188,20 @@ class InternalServiceCore {
   }
   async executeRequest (callback)
   {
-    var id = uuidv4();
     var sequenceId = this.sequenceId;
     var service = this;
 
-    // Special method for locking and unlocking resource
-    var lockResource = "lock";
-    if (this.params.key) {
-      lockResource = lockResource + ":" + this.params.key;
+    if (this.method == "null") {
+      logger.log({level: 'info', message: {type: "NULL", sequenceId: sequenceId}});
+      callback (service, {result: {}});
+      return;
     }
+    // Special method for locking and unlocking resource
     if (this.method == "resource.Lock") {
+      var lockResource = "lock";
+      if (this.params.key) {
+        lockResource = lockResource + ":" + this.params.key;
+      }
       logger.log({level: 'info', message: {type: "LOCK", resource: lockResource, timeout: service.timeout, sequenceId: sequenceId}});
       this.redis.redlock.lock(lockResource, service.timeout * 1000, function(err, lock) {
         if (err) {
@@ -237,6 +243,7 @@ class InternalServiceCore {
       return;
     }
 
+    var id = uuidv4();
     var data = service.params;
     var url = service.url;
     if (this.method == "telegram") {
