@@ -48,6 +48,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     environment:
       - SERVER
+      - CAMUNDA_PASSWORD
       - RedisUrls=$REDIS_PORTS
       - RedisPass=$REDIS_PASSWORD
       - DB_DRIVER=org.postgresql.Driver
@@ -83,7 +84,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     environment:
       - SERVER
-      - GATE_PASSWORD
+      - CAMUNDA_PASSWORD
       - RedisUrls=$REDIS_PORTS
       - RedisPass=$REDIS_PASSWORD
       - DB_DRIVER=org.postgresql.Driver
