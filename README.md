@@ -11,9 +11,9 @@ Java .jar plugins in docker image:
 2. Auto create Admin User + Worker user on first start - check https://github.com/DigitalState/camunda-administrative-user-plugin   
 3. ProcessEnd plugin - call publish message to redis servers or https call to some api to indicate that process ends with id and state   
 
-Copy .env-dev to .env
+Copy .env-dev to .env   
 build.sh - generate Docker images   
 ssl.sh - generate ssl certificates   
 start.sh / stop.sh - Start and stop Service   
-Check .env file to configure passwords and ports
+Check .env file to configure passwords and ports   
 service/deploy.sh - deploy models
