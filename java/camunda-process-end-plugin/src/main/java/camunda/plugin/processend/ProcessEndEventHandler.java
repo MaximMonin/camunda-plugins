@@ -60,8 +60,8 @@ public class ProcessEndEventHandler implements HistoryEventHandler {
         Boolean notifyDone = false;
         Jedis jedis;
         if (redisUrls != null) {
-          try {
-            for(int i = 0; i< redisUrls.length; i++) {
+          for(int i = 0; i< redisUrls.length; i++) {
+            try {
               if (redisPassword == null) {
                 jedis = new Jedis("redis://" + redisUrls[i]);
               }
@@ -72,10 +72,9 @@ public class ProcessEndEventHandler implements HistoryEventHandler {
               jedis.quit();
               notifyDone = true;
             }
-          }
-          catch(Exception e) {
-            log.info (e.getMessage());
-            notifyDone = false;
+            catch(Exception e) {
+              log.info (e.getMessage());
+            }
           }
         }
 
