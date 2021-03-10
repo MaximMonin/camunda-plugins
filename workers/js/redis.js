@@ -4,7 +4,7 @@
 const {createClient} = require('redis');
 const Redlock = require('redlock');
 const MultipleRedis = require('multiple-redis');
-const { promisify } = require("util");
+const {promisify} = require('util');
 
 const log = (type, fn) => fn ? () => {
 	console.log(`Redis: ${type}`);
@@ -12,10 +12,10 @@ const log = (type, fn) => fn ? () => {
 
 class Redis {
   constructor(urls) {
-    this.urls = urls.split(",");
+    this.urls = urls.split(',');
     this.redisServers = [];
     for (var i = 0; i < this.urls.length; i++) {
-      var client = createClient("redis://" + this.urls[i],{
+      var client = createClient('redis://' + this.urls[i],{
         password: process.env.RedisPass,
         retry_strategy: function(options) {
           if (options.error && (options.error.code === 'ECONNREFUSED' || options.error.code === 'NR_CLOSED')) {
@@ -31,17 +31,17 @@ class Redis {
       client.on('reconnecting', log(client.address + ' reconnecting...', true));
       client.on('error'       , log(client.address + ' error', true));
       client.on('end'         , log(client.address + ' closed', true));
-      client.on ("subscribe", function (channel, count) {
-        console.log( "subscriber: " + this.address + ' subscribes on ' + channel);
+      client.on ('subscribe', function (channel) {
+        console.log('subscriber: ' + this.address + ' subscribes on ' + channel);
       });
-      client.on("unsubscribe",  function (channel, count) {
-        console.log( "subscriber: " + this.address + ' unsubscribes from ' + channel);
+      client.on('unsubscribe',  function (channel) {
+        console.log('subscriber: ' + this.address + ' unsubscribes from ' + channel);
       });
-      client.on ("psubscribe", function (pattern, count) {
-        console.log( "subscriber: " + this.address + ' subscribes on ' + pattern);
+      client.on ('psubscribe', function (pattern) {
+        console.log('subscriber: ' + this.address + ' subscribes on ' + pattern);
       });
-      client.on ("punsubscribe", function (pattern, count) {
-        console.log( "subscriber: " + this.address + ' unsubscribes from ' + pattern);
+      client.on ('punsubscribe', function (pattern) {
+        console.log('subscriber: ' + this.address + ' unsubscribes from ' + pattern);
       });
 
       this.redisServers.push (client);
@@ -53,43 +53,43 @@ class Redis {
 	retryJitter:  200 // time in ms
     });
     this.multiClient = MultipleRedis.createClient(this.redisServers);
-  };
+  }
   get(key, callback) {
     this.multiClient.get(key, callback);
-  };
+  }
   getAsync = promisify(this.get).bind(this);
   set(key, value, timeout, callback) {
     this.multiClient.setex(key, timeout, value, callback);
-  };
+  }
   setAsync = promisify(this.set).bind(this);
   publish(channel, message) {
     this.multiClient.publish(channel, message);
-  };
+  }
   subscribe(channel, callback) {
     for (var i = 0; i < this.redisServers.length; i++) {
       this.redisServers[i].subscribe(channel, callback);
     }
-  };
+  }
   on(message, callback) {
     for (var i = 0; i < this.redisServers.length; i++) {
       this.redisServers[i].on(message, callback);
     }
-  };
+  }
   unsubscribe(channel) {
     for (var i = 0; i < this.redisServers.length; i++) {
       this.redisServers[i].unsubscribe(channel);
     }
-  };
+  }
   psubscribe(channel, callback) {
     for (var i = 0; i < this.redisServers.length; i++) {
       this.redisServers[i].psubscribe(channel, callback);
     }
-  };
+  }
   punsubscribe(channel) {
     for (var i = 0; i < this.redisServers.length; i++) {
       this.redisServers[i].punsubscribe(channel);
     }
-  };
+  }
   stop () {
     for (var i = 0; i < this.redisServers.length; i++)
     {

@@ -1,4 +1,4 @@
-const { Variables, File } = require('camunda-external-task-client-js');
+const { Variables } = require('camunda-external-task-client-js');
 const { v4: uuidv4 } = require('uuid');
 const { InternalServiceCore } = require ('./InternalServiceCore.js');
 
@@ -6,7 +6,7 @@ const redisCacheHours = process.env.redisCacheHours || 1;
 
 function InternalService (task, taskService, redis)
 {
-  const { processInstanceId, processDefinitionKey, activityId } = task;
+  const { processDefinitionKey, activityId } = task;
 
   var method = task.variables.get('method');
 
@@ -25,8 +25,8 @@ function InternalService (task, taskService, redis)
         });
         return;
       }
-      checkpar = service.checkparams ();
-      if (checkpar !== "")
+      var checkpar = service.checkparams ();
+      if (checkpar !== '')
       {
         console.log('Error params: ' + checkpar + ' (' + processDefinitionKey + ', ' + activityId + ')');
         taskService.handleFailure(task, {
@@ -58,9 +58,9 @@ function InternalService (task, taskService, redis)
           retries: 0
         });
       }
-    }  
+    }
   }
-};
+}
 
 function handleCallback (service, data)
 {
@@ -68,40 +68,44 @@ function handleCallback (service, data)
   const localVariables = new Variables();
 
   var defaulthandler = service.taskService.error;
+  var result;
   service.taskService.error = handleError;
   if (data.result || data.result === 0) {
-    // Special rules for returning specific data 
+    // Special rules for returning specific data
     if (service.resultReturn) {
-      if (service.resultReturn == 'json') {
-        var result = JSON.stringify(data.result);
+      if (service.resultReturn == 'json' || service.resultReturn == 'string') {
+        if (service.resultReturn == 'string') {
+          result = JSON.stringify(data.result);
+        }
+        else {
+          result = data.result;
+        }
       } else {
-        var result = data.result[service.resultReturn];
+        result = data.result[service.resultReturn];
       }
       // Redis caching to reduce variable size and camunda db size
-      if (service.useRedisCache && ! result.includes("redis:")) {
+      if (service.useRedisCache && ! result.includes('redis:')) {
         var key = uuidv4();
         service.redis.set ( key, result, redisCacheHours * 3600, function(err, res) {
           // return redis-key instead data
           if (res) {
-            localVariables.set("result", "redis:" + key);
-            service.taskService.complete(service.task, processVariables, localVariables);            
+            localVariables.set('result', 'redis:' + key);
+            service.taskService.complete(service.task, processVariables, localVariables);
           }
           else {
             console.log (err);
-            localVariables.set("result", result);
-            service.taskService.complete(service.task, processVariables, localVariables);            
+            localVariables.set('result', result);
+            service.taskService.complete(service.task, processVariables, localVariables);
           }
         });
         return;
       }
-      localVariables.set("result", result);
-    }
-    else {
+      localVariables.set('result', result);
     }
     service.taskService.complete(service.task, processVariables, localVariables);
   }
   else if (data.lock) {
-    processVariables.set("lock", JSON.stringify(data.lock));
+    processVariables.set('lock', JSON.stringify(data.lock));
     service.taskService.complete(service.task, processVariables, localVariables);
   }
   else if (data.error) {
@@ -111,7 +115,7 @@ function handleCallback (service, data)
         if (JSON.stringify(data.error).includes (service.ignoreErrors[i])) {
           data.result = {};
           if (service.resultReturn) {
-             localVariables.set("result", JSON.stringify(data.result));
+             localVariables.set('result', JSON.stringify(data.result));
           }
           service.taskService.complete(service.task, processVariables, localVariables);
           return;
@@ -120,10 +124,10 @@ function handleCallback (service, data)
     }
     var error = JSON.stringify(data.error);
     if (error.length > 4000) {
-      error = "error message too long";
+      error = 'error message too long';
     }
     if (service.resultReturn) {
-      processVariables.set("result", error);
+      processVariables.set('result', error);
     }
     service.taskService.handleBpmnError(service.task, service.method + '-error', error, processVariables);
   }
@@ -144,14 +148,14 @@ function handleCallback (service, data)
     }
     service.maxErrors = service.maxErrors - 1;
 
-    console.log ("Trying to repeat transaction commit...");
-    if (event == "complete") {
+    console.log ('Trying to repeat transaction commit...');
+    if (event == 'complete') {
       service.taskService.complete(service.task, processVariables, localVariables);
     }
-    if (event == "handleFailure") {
+    if (event == 'handleFailure') {
       service.taskService.handleFailure(service.task, { retries: 1, retryTimeout: 1000 });
     }
-    if (event == "handleBpmnError") {
+    if (event == 'handleBpmnError') {
       service.taskService.handleBpmnError(service.task, service.method + '-error', JSON.stringify(data.error), processVariables);
     }
   }

@@ -1,5 +1,5 @@
-const { Client, logger, Variables, File, BasicAuthInterceptor } = require('camunda-external-task-client-js');
-const fs = require('fs');
+const { Client, logger, BasicAuthInterceptor } = require('camunda-external-task-client-js');
+// const fs = require('fs');
 const { router } = require ('./js/router.js');
 const { Redis } = require ('./js/redis.js');
 
@@ -19,13 +19,13 @@ const longPolling = process.env.LongPolling || 60000;
 const tasktype = process.env.TaskType || 'service-task';
 const loglevel = process.env.LogLevel || 'INFO';
 const maxTasks = process.env.JobsToActivate || 25;
-const workerId = process.env.workerId || "some-random-id"
-const caPass = Buffer.from(process.env.CamundaPass, 'base64').toString().substring(0,Buffer.from(process.env.CamundaPass, 'base64').toString().length - 1) || 'camunda'
+const workerId = process.env.workerId || 'some-random-id';
+const caPass = Buffer.from(process.env.CamundaPass, 'base64').toString().substring(0,Buffer.from(process.env.CamundaPass, 'base64').toString().length - 1) || 'camunda';
 
-console.log('Camunda Node worker is starting...')
+console.log('Camunda Node worker is starting...');
 
 const basicAuthentication = new BasicAuthInterceptor({
-  username: "camunda",
+  username: 'camunda',
   password: caPass
 });
 /*
@@ -45,13 +45,13 @@ const sslValidation = new SslInterceptor({ca: caRoot});
 
 // for fast parallel processing it is critical to reduse polling internal to low value
 // create a Client instance with custom configuration
-const config = { baseUrl: url, workerId: workerId, use: logger.level(loglevel), asyncResponseTimeout: longPolling, lockDuration: 50000, 
+const config = { baseUrl: url, workerId: workerId, use: logger.level(loglevel), asyncResponseTimeout: longPolling, lockDuration: 50000,
   maxTasks: maxTasks, interval: 5, autoPoll: false, interceptors: [basicAuthentication /*, sslValidation */] };
 const client = new Client(config);
 const redis = new Redis (RedisUrls);
 
 const topicSubscription = client.subscribe(tasktype, {}, async function ({task, taskService}) {
-//  console.log (JSON.stringify(task)); 
+//  console.log (JSON.stringify(task));
 
   await router (task, taskService, redis);
 });

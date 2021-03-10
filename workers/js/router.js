@@ -1,12 +1,12 @@
 const { InternalService } = require ('./InternalService.js');
 
 function router(task, taskService, redis) {
-  const { topicName, processInstanceId, processDefinitionKey, activityId } = task;
+  const { topicName, processDefinitionKey } = task;
 
-//  console.log (JSON.stringify(task)); 
+//  console.log (JSON.stringify(task));
 
   switch (topicName) {
-  case 'InternalService':
+    case 'InternalService':
     InternalService(task, taskService, redis);
     break;
   default:
@@ -19,7 +19,6 @@ function router(task, taskService, redis) {
       });
     }
   }
-
-};
+}
 
 module.exports = { router };
