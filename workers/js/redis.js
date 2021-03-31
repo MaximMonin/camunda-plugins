@@ -65,6 +65,8 @@ class Redis {
   publish(channel, message) {
     this.multiClient.publish(channel, message);
   }
+  publishAsync = promisify(this.publish).bind(this);
+
   subscribe(channel, callback) {
     for (var i = 0; i < this.redisServers.length; i++) {
       this.redisServers[i].subscribe(channel, callback);
@@ -90,6 +92,23 @@ class Redis {
       this.redisServers[i].punsubscribe(channel);
     }
   }
+  rpush(list, value, callback) {
+		this.multiClient.rpush(list, value, callback);
+  }
+  rpushAsync = promisify(this.rpush).bind(this);
+  lpush(list, value, callback) {
+		this.multiClient.lpush(list, value, callback);
+  }
+  lpushAsync = promisify(this.lpush).bind(this);
+  lrange(list, callback) {
+		this.multiClient.lrange(list, 0, -1, callback);
+  }
+  lrangeAsync = promisify(this.lrange).bind(this);
+  expire(list, timeout, callback) {
+		this.multiClient.expire(list, timeout, callback);
+  }
+  expireAsync = promisify(this.expire).bind(this);
+
   stop () {
     for (var i = 0; i < this.redisServers.length; i++)
     {

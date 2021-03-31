@@ -175,7 +175,7 @@ services:
       - "camunda2:$CAMUNDA2"
 
   db:
-    image: postgres:13.1
+    image: postgres:13.2
     restart: always
     container_name: camunda-plugins-db-$ENVIRONMENT
     ports:

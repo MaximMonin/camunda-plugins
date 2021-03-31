@@ -1,4 +1,3 @@
-const { Variables } = require('camunda-external-task-client-js');
 const { v4: uuidv4 } = require('uuid');
 const { InternalServiceCore } = require ('./InternalServiceCore.js');
 
@@ -64,10 +63,6 @@ function InternalService (task, taskService, redis)
 
 function handleCallback (service, data)
 {
-  const processVariables = new Variables();
-  const localVariables = new Variables();
-
-  var defaulthandler = service.taskService.error;
   var result;
   service.taskService.error = handleError;
   if (data.result || data.result === 0) {
@@ -89,47 +84,47 @@ function handleCallback (service, data)
         service.redis.set ( key, result, redisCacheHours * 3600, function(err, res) {
           // return redis-key instead data
           if (res) {
-            localVariables.set('result', 'redis:' + key);
-            service.taskService.complete(service.task, processVariables, localVariables);
+            service.localVariables.set('result', 'redis:' + key);
+            service.taskService.complete(service.task, service.processVariables, service.localVariables);
           }
           else {
             console.log (err);
-            localVariables.set('result', result);
-            service.taskService.complete(service.task, processVariables, localVariables);
+            service.localVariables.set('result', result);
+            service.taskService.complete(service.task, service.processVariables, service.localVariables);
           }
         });
         return;
       }
-      localVariables.set('result', result);
+      service.localVariables.set('result', result);
     }
-    service.taskService.complete(service.task, processVariables, localVariables);
+    service.taskService.complete(service.task, service.processVariables, service.localVariables);
   }
   else if (data.lock) {
-    processVariables.set('lock', JSON.stringify(data.lock));
-    service.taskService.complete(service.task, processVariables, localVariables);
+    service.processVariables.set('lock', JSON.stringify(data.lock));
+    service.taskService.complete(service.task, service.processVariables, service.localVariables);
   }
-  else if (data.error) {
+  else if (data.error || data.error == '') {
     if (service.ignoreErrors != []) {
       for (var i=0; i < service.ignoreErrors.length; i++)
       {
         if (JSON.stringify(data.error).includes (service.ignoreErrors[i])) {
           data.result = {};
           if (service.resultReturn) {
-             localVariables.set('result', JSON.stringify(data.result));
+             service.localVariables.set('result', JSON.stringify(data.result));
           }
-          service.taskService.complete(service.task, processVariables, localVariables);
+          service.taskService.complete(service.task, service.processVariables, service.localVariables);
           return;
         }
       }
     }
-    var error = JSON.stringify(data.error);
-    if (error.length > 4000) {
-      error = 'error message too long';
+    service.error = JSON.stringify(data.error);
+    if (service.error.length > 4000) {
+      service.error = 'error message too long';
     }
     if (service.resultReturn) {
-      processVariables.set('result', error);
+      service.processVariables.set('result', service.error);
     }
-    service.taskService.handleBpmnError(service.task, service.method + '-error', error, processVariables);
+    service.taskService.handleBpmnError(service.task, service.method + '-error', service.error, service.processVariables);
   }
   else {
     service.taskService.handleFailure(service.task, { retries: 1, retryTimeout: 1000 });
@@ -142,7 +137,7 @@ function handleCallback (service, data)
   {
 //    console.log (e);
     if (service.maxErrors <= 0) {
-      service.taskService.error = defaulthandler;
+      service.taskService.error = service.defaultHandler;
       service.taskService.error (event, task, e);
       return;
     }
@@ -150,13 +145,13 @@ function handleCallback (service, data)
 
     console.log ('Trying to repeat transaction commit...');
     if (event == 'complete') {
-      service.taskService.complete(service.task, processVariables, localVariables);
+      service.taskService.complete(service.task, service.processVariables, service.localVariables);
     }
     if (event == 'handleFailure') {
       service.taskService.handleFailure(service.task, { retries: 1, retryTimeout: 1000 });
     }
     if (event == 'handleBpmnError') {
-      service.taskService.handleBpmnError(service.task, service.method + '-error', JSON.stringify(data.error), processVariables);
+      service.taskService.handleBpmnError(service.task, service.method + '-error', JSON.stringify(service.error), service.processVariables);
     }
   }
 }

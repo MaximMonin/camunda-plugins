@@ -1,3 +1,5 @@
+const { Variables } = require('camunda-external-task-client-js');
+const { excelCreate } = require ('./excel.js');
 const http = require ('http');
 const https = require ('https');
 const httpagent = new http.Agent({ keepAlive: true });
@@ -6,10 +8,12 @@ const axios = require ('axios'); axios.defaults.headers.common['X-Requested-With
 const { v4: uuidv4 } = require('uuid');
 const { createLogger, format, transports } = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
-
+const FormData = require('form-data');
 // Lock and unlock resource with redis redlock
 const { Redlock } = require ('./redis.js');
 
+
+const redisCacheHours = process.env.redisCacheHours || 1;
 const maxLogDays = process.env.maxLogDays || 14;
 const maxLogErrDays = process.env.maxLogErrDays || 60;
 
@@ -62,8 +66,18 @@ const telegramBot = 'yourTelegramBot';
 const ServiceRules = [
    // Special methods for locking and unlocking resource
    // Queries to redis cluster
-   { method: 'resource.Lock', rules: '', timeout: 60},
+   { method: 'resource.Lock', rules: '', timeout: 600},
    { method: 'resource.Unlock', rules: ''},
+
+   // Add rows to temp table
+   { method: 'table.AddRows', rules: 'table,data'},
+   // Read data from temp table
+   { method: 'table.Read', rules: 'table',  resultReturn: 'data', useRedisCache: true},
+   // Read data from cache and return native json data
+   { method: 'cache.Read', rules: 'data,conversion',  resultReturn: 'data'},
+   // Create excel file from
+   { method: 'excel.Create', rules: 'sheets,data',  resultReturn: 'data', useRedisCache: true},
+
    // Special method to do nothing, just return back. Useful for engine test
    { method: 'null', rules: ''},
 
@@ -71,7 +85,9 @@ const ServiceRules = [
    { method: 'environment.Get', rules: '', resultReturn: 'env'},
 
    // Send message to telegram
-   { method: 'telegram', rules: '', url: 'https://api.telegram.org/bot' + telegramBot + '/sendMessage'},
+   { method: 'telegram', rules: 'chat_id,parse_mode', url: 'https://api.telegram.org/bot' + telegramBot + '/sendMessage'},
+   // Send file to telegram
+   { method: 'telegram.File', rules: 'chat_id,filename,data', url: 'https://api.telegram.org/bot' + telegramBot + '/sendDocument'},
 ];
 
 
@@ -93,12 +109,18 @@ class InternalServiceCore {
     this.sequenceId = this.processId;
     if (task.businessKey) {
       this.sequenceId = task.businessKey;
-    }
+    }    
+    this.defaultHandler = this.taskService.error;
+    this.processVariables = new Variables();
+    this.localVariables = new Variables();
+    this.error = '';
 
     try {
-      var params = JSON.parse(task.variables.get('params'));
-
+      var params = task.variables.get('params');
       if (params) {
+        if (typeof params == 'string') {
+          params = JSON.parse (params);
+        }
         this.params = params;
       }
     }
@@ -200,8 +222,11 @@ class InternalServiceCore {
   }
   async executeRequest (callback)
   {
+    var begintime = Date.now();
     var sequenceId = this.sequenceId;
     var service = this;
+    var key;
+    var data;
 
     if (this.method == 'null') {
       logger.log({level: 'info', message: {type: 'NULL', sequenceId: sequenceId}});
@@ -216,13 +241,14 @@ class InternalServiceCore {
       }
       logger.log({level: 'info', message: {type: 'LOCK', resource: lockResource, timeout: service.timeout, sequenceId: sequenceId}});
       this.redis.redlock.lock(lockResource, service.timeout * 1000, function(err, lock) {
+        service.responsetime = Date.now() - begintime;
         if (err) {
-          logger.log({level: 'info', message: {type: 'CANTLOCK', resource: lockResource, timeout: service.timeout, sequenceId: sequenceId}});
+          logger.log({level: 'info', message: {type: 'CANTLOCK', resource: lockResource, timeout: service.timeout, responsetime: service.responsetime, sequenceId: sequenceId}});
           callback (service, 'Repeat again later');
           return;
         }
 
-        logger.log({level: 'info', message: {type: 'LOCKED', resource: lockResource, timeout: service.timeout, sequenceId: sequenceId}});
+        logger.log({level: 'info', message: {type: 'LOCKED', resource: lockResource, timeout: service.timeout, responsetime: service.responsetime, sequenceId: sequenceId}});
         var lockkey = {resource: lockResource, timeout: service.timeout, value: lock.value};
         callback (service, {lock: lockkey});
       });
@@ -234,12 +260,105 @@ class InternalServiceCore {
       try {
         var lock = new Redlock.Lock(this.redis.redlock, lockkey.resource, lockkey.value, lockkey.timeout * 1000);
         lock.unlock(function(err) {
-          // console.log (err);
+          console.log (err);
         });
         callback (service, {result: {}});
       }
       catch (e) {
         callback (service, {result: {}});
+      }
+      return;
+    }
+    // Add data row to table, by using Redis rpush
+    if (this.method == 'table.AddRows') {
+      logger.log({level: 'info', message: {type: 'TABLE.ADD.ROWS', table: service.params.table, sequenceId: sequenceId}});
+      try {
+        for (var i=0; i < service.params.data.length; i++) {
+          await service.redis.rpushAsync(service.params.table, JSON.stringify(service.params.data[i]));
+        }
+        await service.redis.expireAsync(service.params.table, redisCacheHours * 3600);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'info', message: {type: 'TABLE.ROWS.ADDED', table: service.params.table, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {result: {}});
+      }
+      catch (err) {
+        console.log(err);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'error', message: {type: 'TABLE.CANT.ADD', table: service.params.table, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {error: err});
+      }
+      return;
+    }
+    // Read all table rows, by using Redis lrange
+    if (this.method == 'table.Read') {
+      logger.log({level: 'info', message: {type: 'TABLE.READ', table: service.params.table, sequenceId: sequenceId}});
+      try {
+        service.redis.lrange(service.params.table, function(err, items) {
+          if (err) {
+            console.log(err);
+            service.responsetime = Date.now() - begintime;
+            logger.log({level: 'error', message: {type: 'TABLE.CANT.READ', table: service.params.table, responsetime: service.responsetime, sequenceId: sequenceId}});
+            callback (service, {error: err});
+            return;
+          }
+          var data = [];
+          items.forEach((item) => {
+            data.push(JSON.parse(item));
+          });
+          service.responsetime = Date.now() - begintime;
+          logger.log({level: 'info', message: {type: 'TABLE.READ.OK', table: service.params.table, responsetime: service.responsetime, sequenceId: sequenceId}});
+          callback (service, {result: {data: JSON.stringify(data)}});
+        });
+      }
+      catch (err) {
+        console.log(err);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'error', message: {type: 'TABLE.CANT.READ', table: service.params.table, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {error: err});
+      }
+      return;
+    }
+    // Read data from redis cache and return data object
+    if (this.method == 'cache.Read') {
+      logger.log({level: 'info', message: {type: 'CACHE.READ', conversion: service.params.conversion, sequenceId: sequenceId}});
+      try {
+        data = service.params.data;
+        if (data.startsWith('redis:')) {
+          key = data.substring(6);
+          data = await service.redis.getAsync (key);
+        }
+        if (service.params.conversion.includes ('base64')) {
+          data = Buffer.from(data, 'base64').toString();
+        }
+        if (service.params.conversion.includes ('json')) {
+          data = JSON.parse(data);
+        }
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'info', message: {type: 'CACHE.READ.OK', conversion: service.params.conversion, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {result: {data: data}});
+      }
+      catch (err) {
+        console.log(err);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'error', message: {type: 'CACHE.CANT.READ', conversion: service.params.conversion, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {error: err});
+      }
+      return;
+    }
+    // write array of data tables to excel file
+    if (this.method == 'excel.Create') {
+      logger.log({level: 'info', message: {type: 'EXCEL.CREATE', sheets: service.params.sheets, sequenceId: sequenceId}});
+      try {
+        data = await excelCreate(service, service.params.sheets, service.params.data);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'info', message: {type: 'EXCEL.CREATED', sheets: service.params.sheets, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {result: {data: data}});
+      }
+      catch (err) {
+        console.log(err);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'error', message: {type: 'EXCEL.CANT.CREATE', sheets: service.params.sheets, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {error: err});
       }
       return;
     }
@@ -256,7 +375,7 @@ class InternalServiceCore {
     }
 
     var id = uuidv4();
-    var data = service.params;
+    data = service.params;
     var url = service.url;
     if (this.method == 'telegram') {
       var text = encodeURI(this.task.variables.get('message'));
@@ -277,7 +396,6 @@ class InternalServiceCore {
 
     // Check for redis caching (filedata or passwords)
     try {
-      var key;
       if (data && data.data && data.data.includes ('redis:')) {
         key = data.data.substring(6);
         data.data = await service.redis.getAsync (key);
@@ -290,7 +408,16 @@ class InternalServiceCore {
     catch (e) {
       console.log (e);
     }
-    var begintime = Date.now();
+
+    var headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+    if (this.method == 'telegram.File') {
+      const formData = new FormData();
+      formData.append('document', Buffer.from(data.data, 'base64'), data.filename);
+      headers = formData.getHeaders();
+      url = url + '?chat_id=' + data.chat_id;
+      data = formData;
+    }
+
     axios({
       method: 'post',
       url: url,
@@ -298,7 +425,7 @@ class InternalServiceCore {
       httpAgent: httpagent,
       httpsAgent: httpsagent,
       timeout: service.timeout * 1000,
-      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      headers: headers
     })
     .then(response => {
       service.responsetime = Date.now() - begintime;

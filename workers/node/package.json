@@ -1,6 +1,6 @@
 {
-  "name": "camunda-plugins-worker",
-  "version": "0.1.0",
+  "name": "camunda-cluster-worker",
+  "version": "1.0.0",
   "description": "Cluster Node.js worker for Camunda",
   "private": true,
   "dependencies": {
@@ -8,10 +8,14 @@
     "axios": "~0.21.1",
     "uuid": "~8.3.1",
     "tmp": "~0.2.1",
+    "tar": "~6.1.0",
+    "formidable": "~1.2.2",
+    "form-data": "~3.0.0",
     "winston": "~3.3.3",
     "winston-daily-rotate-file": "~4.5.0",
     "redis": "~3.0.2",
     "redlock": "~4.2.0",
-    "multiple-redis": "~2.0.0"
+    "multiple-redis": "~2.0.0",
+    "exceljs": "~4.2.1"
   }
 }
