@@ -151,7 +151,7 @@ function handleCallback (service, data)
       service.taskService.handleFailure(service.task, { retries: 1, retryTimeout: 1000 });
     }
     if (event == 'handleBpmnError') {
-      service.taskService.handleBpmnError(service.task, service.method + '-error', JSON.stringify(service.error), service.processVariables);
+      service.taskService.handleBpmnError(service.task, service.method + '-error', service.error, service.processVariables);
     }
   }
 }
