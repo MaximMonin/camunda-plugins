@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:camunda="http://camunda.org/schema/1.0/dmn" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" id="TelegramChannelDMN" name="TelegramChannelDMN" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <decision id="Service.TelegramChannel" name="Service.TelegramChannel" camunda:historyTimeToLive="14">
+    <informationRequirement id="InformationRequirement_12a3cmp">
+      <requiredInput href="#InputData_0rp9h4n" />
+    </informationRequirement>
+    <decisionTable id="DecisionTable_026t1zn">
+      <input id="InputClause_0yyl92u" label="environment" biodi:width="210">
+        <inputExpression id="LiteralExpression_0grso2q" typeRef="string" expressionLanguage="feel">
+          <text>env</text>
+        </inputExpression>
+      </input>
+      <output id="Output_1" label="telegramChannel" name="telegramChannel" typeRef="string" />
+      <rule id="DecisionRule_10nh5if">
+        <inputEntry id="UnaryTests_0pos5pg">
+          <text>"dev"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_04di24t">
+          <text>"yourDevChannel"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_14a5vu4">
+        <inputEntry id="UnaryTests_04jpshl">
+          <text>"stage"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0qptbi7">
+          <text>"yourDevChannel"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1vo1a94">
+        <inputEntry id="UnaryTests_0rz338g">
+          <text>"prod"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0sps3of">
+          <text>"yourProdChannel"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_01dvxq8">
+        <inputEntry id="UnaryTests_10hb8jj">
+          <text>"ENVIRONMENTNotDefined"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0j8pebf">
+          <text>"yourDevChannel"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <inputData id="InputData_0rp9h4n" name="env" />
+  <textAnnotation id="TextAnnotation_07tre4q">
+    <text>output: telegramChannel</text>
+  </textAnnotation>
+  <association id="Association_1lombw9">
+    <sourceRef href="#TextAnnotation_07tre4q" />
+    <targetRef href="#Service.TelegramChannel" />
+  </association>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram>
+      <dmndi:DMNShape dmnElementRef="Service.TelegramChannel">
+        <dc:Bounds height="80" width="180" x="270" y="290" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="DMNShape_1mr7xpg" dmnElementRef="InputData_0rp9h4n">
+        <dc:Bounds height="45" width="125" x="157" y="107" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="DMNShape_0vhlfa2" dmnElementRef="TextAnnotation_07tre4q">
+        <dc:Bounds height="50" width="190" x="480" y="105" />
+      </dmndi:DMNShape>
+      <dmndi:DMNEdge id="DMNEdge_18q9h9j" dmnElementRef="Association_1lombw9">
+        <di:waypoint x="521" y="155" />
+        <di:waypoint x="403" y="290" />
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="DMNEdge_0x5uxlx" dmnElementRef="InformationRequirement_12a3cmp">
+        <di:waypoint x="220" y="152" />
+        <di:waypoint x="360" y="270" />
+        <di:waypoint x="360" y="290" />
+      </dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>
