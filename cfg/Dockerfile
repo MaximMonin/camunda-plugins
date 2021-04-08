@@ -1,6 +1,6 @@
-FROM camunda/camunda-bpm-platform:tomcat-7.14.0
+FROM camunda/camunda-bpm-platform:tomcat-7.15.0
 RUN rm -r webapps/camunda-invoice webapps/examples webapps/h2
-COPY postgresql-42.2.16.jar /camunda/lib/postgresql-9.4.1212.jar
+COPY postgresql-42.2.19.jar /camunda/lib/postgresql-9.4.1212.jar
 COPY web.xml /camunda/webapps/engine-rest/WEB-INF/web.xml
 COPY bpm-platform.xml /camunda/conf/
 

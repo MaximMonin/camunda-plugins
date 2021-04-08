@@ -12,9 +12,9 @@
   <name>Camunda Process End engine plugin</name>
 
   <properties>
-      <version.camunda-bpm>7.14.0</version.camunda-bpm>
+      <version.camunda-bpm>7.15.0</version.camunda-bpm>
       <version.h2>1.4.190</version.h2>
-      <version.java>11.0.4</version.java>
+      <version.java>11.0.9</version.java>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <maven.compiler.source>11</maven.compiler.source>
       <maven.compiler.target>11</maven.compiler.target>
@@ -68,6 +68,19 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+    <repositories>
+        <repository>
+            <id>camunda-bpm-nexus</id>
+            <url>https://app.camunda.com/nexus/content/groups/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->

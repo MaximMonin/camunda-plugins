@@ -43,7 +43,7 @@ services:
       - 8080
       - 8443
     volumes:
-      - ./cfg/server.xml:/camunda/conf/server.xml:ro
+      - ./cfg/server.xml:/camunda/conf/server.xml
       - ./cfg/ssl/camunda.p12:/camunda/conf/camunda.p12:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
@@ -79,7 +79,7 @@ services:
       - 8080
       - 8443
     volumes:
-      - ./cfg/server.xml:/camunda/conf/server.xml:ro
+      - ./cfg/server.xml:/camunda/conf/server.xml
       - ./cfg/ssl/camunda.p12:/camunda/conf/camunda.p12:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
