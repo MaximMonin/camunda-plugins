@@ -1,3 +1,5 @@
+'use strict';
+
 // Lock and unlock containers with redis redlock
 // Set and Get records to multiplay redis servers
 
@@ -16,7 +18,7 @@ class Redis {
     this.redisServers = [];
     for (var i = 0; i < this.urls.length; i++) {
       var client = createClient('redis://' + this.urls[i],{
-        password: process.env.RedisPass,
+        password: process.env.REDIS_PASSWORD,
         retry_strategy: function(options) {
           if (options.error && (options.error.code === 'ECONNREFUSED' || options.error.code === 'NR_CLOSED')) {
             // Try reconnecting after 5 seconds
@@ -104,6 +106,9 @@ class Redis {
 		this.multiClient.lrange(list, 0, -1, callback);
   }
   lrangeAsync = promisify(this.lrange).bind(this);
+  llen(list, callback) {
+		this.multiClient.llen(list, callback);
+  }
   expire(list, timeout, callback) {
 		this.multiClient.expire(list, timeout, callback);
   }

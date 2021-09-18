@@ -1,5 +1,8 @@
+'use strict';
+
 const { Variables } = require('camunda-external-task-client-js');
 const { excelCreate } = require ('./excel.js');
+const { encrypt, decrypt } = require ('./crypto.js');
 const http = require ('http');
 const https = require ('https');
 const httpagent = new http.Agent({ keepAlive: true });
@@ -9,21 +12,22 @@ const { v4: uuidv4 } = require('uuid');
 const { createLogger, format, transports } = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const FormData = require('form-data');
+const caPass = Buffer.from(process.env.CAMUNDA_PASSWORD, 'base64').toString().substring(0,Buffer.from(process.env.CAMUNDA_PASSWORD, 'base64').toString().length - 1) || 'camunda';
 // Lock and unlock resource with redis redlock
 const { Redlock } = require ('./redis.js');
-
 
 const redisCacheHours = process.env.redisCacheHours || 1;
 const maxLogDays = process.env.maxLogDays || 14;
 const maxLogErrDays = process.env.maxLogErrDays || 60;
+const telegramBot = process.env.TELEGRAM_BOT;
 
-var transport = new DailyRotateFile({
+const transport = new DailyRotateFile({
     filename: 'internal-service-%DATE%.log',
     dirname: '/logs',
     datePattern: 'YYYY-MM-DD',
     maxFiles: maxLogDays + 'd'
 });
-var transportErr = new DailyRotateFile({
+const transportErr = new DailyRotateFile({
     level: 'error',
     filename: 'internal-service-error-%DATE%.log',
     dirname: '/logs',
@@ -62,7 +66,6 @@ const logger = createLogger({
   ],
 });
 
-const telegramBot = 'yourTelegramBot';
 const ServiceRules = [
    // Special methods for locking and unlocking resource
    // Queries to redis cluster
@@ -71,28 +74,41 @@ const ServiceRules = [
 
    // Add rows to temp table
    { method: 'table.AddRows', rules: 'table,data'},
+   // Check number of records in temp table
+   { method: 'table.Count', rules: 'table', resultReturn: 'data'},
    // Read data from temp table
-   { method: 'table.Read', rules: 'table',  resultReturn: 'data', useRedisCache: true},
-   // Read data from cache and return native json data
-   { method: 'cache.Read', rules: 'data,conversion',  resultReturn: 'data'},
+   { method: 'table.Read', rules: 'table', resultReturn: 'data', useRedisCache: true},
+   // Read data from redis cache and return native json data
+   { method: 'cache.Read', rules: 'data,conversion', resultReturn: 'data'},
    // Create excel file from
-   { method: 'excel.Create', rules: 'sheets,data',  resultReturn: 'data', useRedisCache: true},
+   { method: 'excel.Create', rules: 'sheets,data', resultReturn: 'data', useRedisCache: true},
 
    // Special method to do nothing, just return back. Useful for engine test
    { method: 'null', rules: ''},
 
    // get enviroment variables for current server
    { method: 'environment.Get', rules: '', resultReturn: 'env'},
+   // stop all other processes of this type of process except current process
+   { method: 'processes.StopOther', rules: '' },
 
    // Send message to telegram
    { method: 'telegram', rules: 'chat_id,parse_mode', url: 'https://api.telegram.org/bot' + telegramBot + '/sendMessage'},
    // Send file to telegram
    { method: 'telegram.File', rules: 'chat_id,filename,data', url: 'https://api.telegram.org/bot' + telegramBot + '/sendDocument'},
+   // Send email, check https://nodemailer.com/message/ for message format and other fields description
+   // attachment file contents can be reference to redis cache file object
+   { method: 'email', rules: 'to,subject'},
+
+   // generatePassword
+   { method: 'generatePassword', rules: 'length', resultReturn: 'data', useRedisCache: true},
+   // encrypt/decrypt sensetive data like passwords
+   { method: 'encrypt', rules: 'text,key', resultReturn: 'data', useRedisCache: true},
+   { method: 'decrypt', rules: 'text,key', resultReturn: 'data', useRedisCache: true},
 ];
 
 
 class InternalServiceCore {
-  constructor(task, taskService, method, redis) {
+  constructor(task, taskService, method, worker) {
     this.task = task;
     this.taskService = taskService;
     this.method = method;
@@ -105,11 +121,12 @@ class InternalServiceCore {
     this.resultReturn = null;
     this.useRedisCache = false;
     this.responsetime = 0;
-    this.redis = redis;
+    this.redis = worker.redis;
+    this.mailer = worker.mailer;
     this.sequenceId = this.processId;
     if (task.businessKey) {
       this.sequenceId = task.businessKey;
-    }    
+    }
     this.defaultHandler = this.taskService.error;
     this.processVariables = new Variables();
     this.localVariables = new Variables();
@@ -289,6 +306,33 @@ class InternalServiceCore {
       }
       return;
     }
+
+    // Count record number in table, by using Redis llen
+    if (this.method == 'table.Count') {
+      logger.log({level: 'info', message: {type: 'TABLE.COUNT', table: service.params.table, sequenceId: sequenceId}});
+      try {
+        service.redis.llen(service.params.table, function(err, data) {
+          if (err) {
+            console.log(err);
+            service.responsetime = Date.now() - begintime;
+            logger.log({level: 'error', message: {type: 'TABLE.CANT.READ', table: service.params.table, responsetime: service.responsetime, sequenceId: sequenceId}});
+            callback (service, {error: err});
+            return;
+          }
+          service.responsetime = Date.now() - begintime;
+          logger.log({level: 'info', message: {type: 'TABLE.COUNT.OK', table: service.params.table, responsetime: service.responsetime, sequenceId: sequenceId}});
+          callback (service, {result: {data: data}});
+        });
+      }
+      catch (err) {
+        console.log(err);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'error', message: {type: 'TABLE.CANT.READ', table: service.params.table, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {error: err});
+      }
+      return;
+    }
+
     // Read all table rows, by using Redis lrange
     if (this.method == 'table.Read') {
       logger.log({level: 'info', message: {type: 'TABLE.READ', table: service.params.table, sequenceId: sequenceId}});
@@ -373,6 +417,116 @@ class InternalServiceCore {
       }
       return;
     }
+    if (this.method == 'generatePassword') {
+      logger.log({level: 'info', message: {type: 'GeneratePassword', params: service.params, sequenceId: sequenceId}});
+      try {
+        callback (service, {result: {data: genPassword (service.params.length)}});
+      }
+      catch (e) {
+        callback (service, {error: e});
+      }
+      return;
+    }
+    if (this.method == 'encrypt') {
+      logger.log({level: 'info', message: {type: 'encrypt', sequenceId: sequenceId}});
+      try {
+        data = service.params.text;
+        if (data.includes ('redis:')) {
+          key = data.substring(6);
+          data = await service.redis.getAsync (key);
+        }
+        data = encrypt (data, service.params.key);
+        logger.log({level: 'info', message: {type: 'encrypt-done', sequenceId: sequenceId}});
+        callback (service, {result: {data: data}});
+      }
+      catch (e) {
+        console.log (e);
+        logger.log({level: 'info', message: {type: 'encrypt-error', sequenceId: sequenceId}});
+        callback (service, {error: e});
+      }
+      return;
+    }
+    if (this.method == 'decrypt') {
+      logger.log({level: 'info', message: {type: 'decrypt', sequenceId: sequenceId}});
+      try {
+        data = service.params.text;
+        if (data.includes ('redis:')) {
+          key = data.substring(6);
+          data = await service.redis.getAsync (key);
+        }
+        data = decrypt (data, service.params.key);
+        logger.log({level: 'info', message: {type: 'decrypt-done', sequenceId: sequenceId}});
+        callback (service, {result: {data: data}});
+      }
+      catch (e) {
+        console.log (e);
+        logger.log({level: 'info', message: {type: 'decrypt-error', sequenceId: sequenceId}});
+        callback (service, {error: e});
+      }
+      return;
+    }
+
+    // stop other processes of this type except current process
+    if (this.method == 'processes.StopOther') {
+      logger.log({level: 'info', message: {type: 'PROCESSES.STOPOTHER', process: service.task.processDefinitionKey, sequenceId: sequenceId}});
+      try {
+        await StopOther(service, service.task.processDefinitionKey, service.processId);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'info', message: {type: 'PROCESSES.STOPEDOTHER', process: service.task.processDefinitionKey, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {result: {}});
+      }
+      catch (error) {
+//        console.log(error.response);
+        var errdata;
+        if (error.response) {
+          errdata = error.response.data;
+        }
+        else if (error.request) {
+          errdata = 'Service request timeout: ' + service.taskService.api.baseUrl;
+        }
+        else {
+          errdata = error.message;
+        }
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'error', message: {type: 'PROCESSES.CANT.STOP', process: service.task.processDefinitionKey, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {error: errdata});
+      }
+      return;
+    }
+    if (this.method == 'email') {
+      logger.log({level: 'info', message: {type: 'EMAIL.SEND', to: service.params.to, subject: service.params.subject, sequenceId: sequenceId}});
+      try {
+        // Replace file attachment as links to redis cache files
+        if (service.params.attachments) {
+          for (var j=0; j < service.params.attachments.length; j++) {
+            var attachment = service.params.attachments[j];
+            if (attachment.content && attachment.content.includes('redis:')) {
+              attachment.content = await service.redis.getAsync (attachment.content.substring(6));
+              attachment['encoding'] = 'base64';
+            }
+          }
+        }
+        service.mailer.sendMail(service.params, (error, info) => {
+          service.responsetime = Date.now() - begintime;
+          if (error) {
+//            console.log (error);
+            logger.log({level: 'error', message: {type: 'EMAIL.CANT.SEND', to: service.params.to, subject: service.params.subject, error: error.message, responsetime: service.responsetime, sequenceId: sequenceId}});
+            callback (service, {error: error.message});
+            return;
+          }
+          logger.log({level: 'info', message: {type: 'EMAIL.SENT', to: service.params.to, subject: service.params.subject, responsetime: service.responsetime, sequenceId: sequenceId}});
+          callback (service, {result: {}});
+        });
+      }
+      catch (errdata) {
+        console.log(errdata);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'error', message: {type: 'EMAIL.CANT.SEND', to: service.params.to, subject: service.params.subject, responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {error: errdata});
+      }
+      return;
+    }
+
 
     var id = uuidv4();
     data = service.params;
@@ -472,6 +626,42 @@ async function lockTask (service, timeout)
     // Another process locked or executed this task
     return false;
   }
+}
+
+// Stop all other processes except current
+async function StopOther (service, process, processId)
+{
+  var CamundaUrl = service.taskService.api.baseUrl;
+  var authCamunda = {
+      username: 'camunda',
+      password: caPass
+  };
+  const response = await axios.get( CamundaUrl + '/process-instance?processDefinitionKey=' + process, {httpAgent: httpagent, httpsAgent: httpsagent, timeout: 20000, auth: authCamunda});
+  var response2;
+  var ids = [];
+  if (response.data) {
+    for ( var i = 0; i < response.data.length; i++) {
+      if (response.data[i].id !== processId) {
+        ids.push (response.data[i].id);
+      }
+    }
+    if (ids.length > 0) {
+      var deldata = {'processInstanceIds': ids, 'failIfNotExists': false};
+      response2 = await axios.post( CamundaUrl + '/process-instance/delete', deldata, {httpAgent: httpagent, httpsAgent: httpsagent, timeout: 20000, auth: authCamunda});
+      logger.log({level: 'info', message: {type: 'PROCESSES.STOPED', processes: ids, sequenceId: service.sequenceId}});
+    }
+  }
+}
+
+function genPassword (len) {
+  var result           = '';
+  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+
+  for (var i=0; i < len; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 }
 
 module.exports = {InternalServiceCore};

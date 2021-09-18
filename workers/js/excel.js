@@ -1,3 +1,5 @@
+'use strict';
+
 const Excel = require('exceljs');
 const tmp = require('tmp');
 const fs = require('fs');
@@ -25,8 +27,14 @@ async function excelCreate (service, sheets, data)
 
     var sheetColumns = [];
     for (var j=0; j<sheetData.length; j++) {
-      if (j == 0) {
-        for (let [key] of Object.entries(sheetData[j])) {
+      for (let [key] of Object.entries(sheetData[j])) {
+        var found = false;
+        for (var k = 0; k < sheetColumns.length; k++) {
+          if (sheetColumns[k].header == key) {
+            found = true;
+          }
+        }
+        if (! found) {
           sheetColumns.push ({header: key, key: key, width: 20});
         }
       }

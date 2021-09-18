@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   db_replica:
-    image: postgres:13.2
+    image: postgres:13.3
     restart: always
     container_name: camunda-plugins-db-replica-$ENVIRONMENT
     depends_on:
@@ -16,7 +16,7 @@ services:
         echo 'Starting replication...'
         sleep 10
         pg_basebackup -d postgresql://camunda@${REPLICA_PORT}/camunda -D /var/lib/postgresql/data -Fp -Xs -P -R -w -C -S replica_db
-        exec docker-entrypoint.sh postgres -c max_connections=400 -c shared_buffers=1GB -c effective_cache_size=1536MB -c maintenance_work_mem=256MB -c max_locks_per_transaction=2000
+        exec docker-entrypoint.sh postgres -c max_connections=500 -c shared_buffers=1GB -c effective_cache_size=1536MB -c maintenance_work_mem=256MB -c max_locks_per_transaction=2000
     volumes:
       - ./dbreplica:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro

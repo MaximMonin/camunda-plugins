@@ -1,18 +1,18 @@
+'use strict';
+
 const { v4: uuidv4 } = require('uuid');
 const { InternalServiceCore } = require ('./InternalServiceCore.js');
-
 const redisCacheHours = process.env.redisCacheHours || 1;
 
-function InternalService (task, taskService, redis)
+function InternalService (task, taskService, worker)
 {
   const { processDefinitionKey, activityId } = task;
-
-  var method = task.variables.get('method');
+  const method = task.variables.get('method');
 
   if (method && method !== '')
   {
     try {
-      var service = new InternalServiceCore (task, taskService, method, redis);
+      const service = new InternalServiceCore (task, taskService, method, worker);
 
       if (service.checkmethod() == false)
       {

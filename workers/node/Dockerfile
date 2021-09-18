@@ -1,4 +1,4 @@
-FROM node:14.15.4-stretch-slim
+FROM node:14.17.1-buster-slim
 
 RUN mkdir -p /app
 COPY ./package.json /app/package.json

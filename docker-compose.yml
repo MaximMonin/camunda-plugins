@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   camunda-nginx:
-    image: nginx:1.19.6
+    image: nginx:1.20.1
     restart: always
     container_name: camunda-plugins-gateway-$ENVIRONMENT
     hostname: 'camunda-gateway'
@@ -14,16 +14,14 @@ services:
       - 443
     volumes:
       - ./cfg/camunda-${ENVIRONMENT}.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./cfg/ssl/camunda.crt:/ssl/camunda.crt:ro
-      - ./cfg/ssl/camunda.key:/ssl/camunda.key:ro
-      - ./cfg/ssl/dhparam.pem:/ssl/dhparam.pem:ro
+      - ./cfg/ssl:/ssl
       #- ./cfg/logrotate.nginx:/etc/logrotate.d/nginx:ro
       #- ./logs/:/var/log/nginx/
       - /etc/localtime:/etc/localtime:ro
     networks:
       default:
         aliases:
-          - camunda-gateway        
+          - camunda-gateway
     extra_hosts:
       - "camunda:$CAMUNDA"
       - "camunda2:$CAMUNDA2"
@@ -43,10 +41,11 @@ services:
       - 8080
       - 8443
     volumes:
-      - ./cfg/server.xml:/camunda/conf/server.xml
+      - ./cfg/server.xml:/camunda/conf/server.xml:ro
       - ./cfg/ssl/camunda.p12:/camunda/conf/camunda.p12:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
+      - JAVA_OPTS=-Xmx8g -XX:MaxRAMPercentage=25.0 -XX:MaxMetaspaceSize=256m
       - SERVER
       - CAMUNDA_PASSWORD
       - RedisUrls=$REDIS_PORTS
@@ -55,7 +54,7 @@ services:
       - DB_URL=jdbc:postgresql://${DB_PORT}/camunda
       - DB_USERNAME=camunda
       - DB_PASSWORD=camunda
-      - DB_CONN_MAXACTIVE=100
+      - DB_CONN_MAXACTIVE=200
       - WAIT_FOR=${DB_PORT}
       - WAIT_FOR_TIMEOUT=60
       - TZ=Europe/Kiev
@@ -83,6 +82,7 @@ services:
       - ./cfg/ssl/camunda.p12:/camunda/conf/camunda.p12:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
+      - JAVA_OPTS=-Xmx8g -XX:MaxRAMPercentage=25.0 -XX:MaxMetaspaceSize=256m
       - SERVER
       - CAMUNDA_PASSWORD
       - RedisUrls=$REDIS_PORTS
@@ -91,7 +91,7 @@ services:
       - DB_URL=jdbc:postgresql://${DB_PORT}/camunda
       - DB_USERNAME=camunda
       - DB_PASSWORD=camunda
-      - DB_CONN_MAXACTIVE=100
+      - DB_CONN_MAXACTIVE=200
       - WAIT_FOR=${DB_PORT}
       - WAIT_FOR_TIMEOUT=60
       - TZ=Europe/Kiev
@@ -110,28 +110,16 @@ services:
     networks:
       default:
     environment:
-      - ENVIRONMENT
-      - SERVER
-      - LogLevel=info
+      - TaskType=InternalService
       - CamundaUrl=http://camunda-engine1:8080/engine-rest
       - RedisUrls=$REDIS_PORTS
       - workerId=worker1
-      - CamundaPass=$CAMUNDA_PASSWORD
-      - RedisPass=$REDIS_PASSWORD
       - JobsToActivate=200
-      - LongPolling=60000
-      - TaskType=InternalService
-      # rotate logfile days
-      - maxLogDays=14
-      # rotate error logfile days
-      - maxLogErrDays=60
-      # keep redis file cache in Hours
-      - redisCacheHours=1
     volumes:
       - ./logs:/logs
+      - ./.env:/app/.env:ro
       - ./workers/node/server.js:/app/server.js:ro
       - ./workers/js:/app/js
-      # - ./cfg/ssl/rootcamundaCA.crt:/ssl/camundaCA.crt:ro
       - /etc/localtime:/etc/localtime:ro
     extra_hosts:
       - "camunda:$CAMUNDA"
@@ -147,40 +135,28 @@ services:
     networks:
       default:
     environment:
-      - ENVIRONMENT
-      - SERVER
-      - LogLevel=info
+      - TaskType=InternalService
       - CamundaUrl=http://camunda-engine2:8080/engine-rest
       - RedisUrls=$REDIS_PORTS
       - workerId=worker2
-      - CamundaPass=$CAMUNDA_PASSWORD
-      - RedisPass=$REDIS_PASSWORD
       - JobsToActivate=200
-      - LongPolling=60000
-      - TaskType=InternalService
-      # rotate logfile days
-      - maxLogDays=14
-      # rotate error logfile days
-      - maxLogErrDays=60
-      # keep redis file cache in Hours
-      - redisCacheHours=1
     volumes:
       - ./logs:/logs
+      - ./.env:/app/.env:ro
       - ./workers/node/server.js:/app/server.js:ro
       - ./workers/js:/app/js
-      # - ./cfg/ssl/rootcamundaCA.crt:/ssl/camundaCA.crt:ro
       - /etc/localtime:/etc/localtime:ro
     extra_hosts:
       - "camunda:$CAMUNDA"
       - "camunda2:$CAMUNDA2"
 
   db:
-    image: postgres:13.2
+    image: postgres:13.3
     restart: always
     container_name: camunda-plugins-db-$ENVIRONMENT
     ports:
       - $DB_PORT:5432
-    command: postgres -c max_connections=400
+    command: postgres -c max_connections=500
                       -c shared_buffers=1GB
                       -c effective_cache_size=1536MB
                       -c maintenance_work_mem=256MB
@@ -200,7 +176,7 @@ services:
       - POSTGRES_PASSWORD=postgres
 
   pgadmin-nginx:
-    image: nginx:1.19.6
+    image: nginx:1.20.1
     restart: always
     container_name: camunda-plugins-nginx2-$ENVIRONMENT
     depends_on:
@@ -211,16 +187,13 @@ services:
       - 443
     volumes:
       - ./cfg/pgadmin.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./cfg/ssl/camunda.crt:/ssl/camunda.crt:ro
-      - ./cfg/ssl/camunda.key:/ssl/camunda.key:ro
-      - ./cfg/ssl/dhparam.pem:/ssl/dhparam.pem:ro
-      #- ./cfg/ssl/trustedclient.crt:/ssl/trustedclient.crt:ro
+      - ./cfg/ssl:/ssl
       - /etc/localtime:/etc/localtime:ro
     networks:
       default:
 
   pgadmin:
-    image: dpage/pgadmin4:4.28
+    image: dpage/pgadmin4:5.4
     container_name: camunda-plugins-pgadmin-$ENVIRONMENT
     restart: always
     depends_on:
@@ -233,13 +206,13 @@ services:
       - ./cfg/servers.json:/pgadmin4/servers.json:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@postgres
+      - PGADMIN_DEFAULT_EMAIL=admin@postgres.com
       - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_PASSWORD
       - PGADMIN_SERVER_JSON_FILE=/pgadmin4/servers.json
 
   # odd number of redis for redlock quorum (1 or 3 or more)
   redis1:
-    image: redis:6.0.7
+    image: redis:6.2.4
     container_name: camunda-plugins-redis1-$ENVIRONMENT
     restart: always
     ports:
@@ -255,7 +228,7 @@ services:
     command: [ "redis-server", "/redis.conf" ]
 
   redis2:
-    image: redis:6.0.7
+    image: redis:6.2.4
     container_name: camunda-plugins-redis2-$ENVIRONMENT
     restart: always
     ports:
@@ -271,7 +244,7 @@ services:
     command: [ "redis-server", "/redis.conf" ]
 
   redis3:
-    image: redis:6.0.7
+    image: redis:6.2.4
     container_name: camunda-plugins-redis3-$ENVIRONMENT
     restart: always
     ports:
