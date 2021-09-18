@@ -23,7 +23,7 @@ class Mailer {
     },
     {
       from: {
-        name: 'Mirohost Camunda',
+        name: 'Camunda',
         address: process.env.MAIL_FROM,
       }
     }
