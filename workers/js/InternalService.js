@@ -2,6 +2,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const { InternalServiceCore } = require ('./InternalServiceCore.js');
+const {getVariableType} = require('./camundaUtils');
 const redisCacheHours = process.env.redisCacheHours || 1;
 
 function InternalService (task, taskService, worker)
@@ -78,24 +79,27 @@ function handleCallback (service, data)
       } else {
         result = data.result[service.resultReturn];
       }
+      if (service.useRedisCache && typeof result !== 'string') {
+        result = JSON.stringify(result);
+      }
       // Redis caching to reduce variable size and camunda db size
       if (service.useRedisCache && ! result.includes('redis:')) {
         var key = uuidv4();
         service.redis.set ( key, result, redisCacheHours * 3600, function(err, res) {
           // return redis-key instead data
           if (res) {
-            service.localVariables.set('result', 'redis:' + key);
+            service.localVariables.setTyped('result', { type: 'string', value: 'redis:' + key, valueInfo: {transient: true}});
             service.taskService.complete(service.task, service.processVariables, service.localVariables);
           }
           else {
             console.log (err);
-            service.localVariables.set('result', result);
+            service.localVariables.setTyped('result', { type: getVariableType(result), value: result, valueInfo: {transient: true}});
             service.taskService.complete(service.task, service.processVariables, service.localVariables);
           }
         });
         return;
       }
-      service.localVariables.set('result', result);
+      service.localVariables.setTyped('result', { type: getVariableType(result), value: result, valueInfo: {transient: true}});
     }
     service.taskService.complete(service.task, service.processVariables, service.localVariables);
   }
@@ -110,7 +114,7 @@ function handleCallback (service, data)
         if (JSON.stringify(data.error).includes (service.ignoreErrors[i])) {
           data.result = {};
           if (service.resultReturn) {
-             service.localVariables.set('result', JSON.stringify(data.result));
+            service.localVariables.setTyped('result', { type: 'string', value: JSON.stringify(data.result), valueInfo: {transient: true}});
           }
           service.taskService.complete(service.task, service.processVariables, service.localVariables);
           return;
