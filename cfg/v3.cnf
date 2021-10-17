@@ -10,3 +10,4 @@ DNS.3 = camunda-engine1
 DNS.4 = camunda-engine2
 DNS.5 = camunda1
 DNS.6 = camunda2
+DNS.7 = localhost

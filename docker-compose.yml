@@ -54,7 +54,7 @@ services:
       - DB_URL=jdbc:postgresql://${DB_PORT}/camunda
       - DB_USERNAME=camunda
       - DB_PASSWORD=camunda
-      - DB_CONN_MAXACTIVE=200
+      - DB_CONN_MAXACTIVE=1000
       - WAIT_FOR=${DB_PORT}
       - WAIT_FOR_TIMEOUT=60
       - TZ=Europe/Kiev
@@ -91,7 +91,7 @@ services:
       - DB_URL=jdbc:postgresql://${DB_PORT}/camunda
       - DB_USERNAME=camunda
       - DB_PASSWORD=camunda
-      - DB_CONN_MAXACTIVE=200
+      - DB_CONN_MAXACTIVE=1000
       - WAIT_FOR=${DB_PORT}
       - WAIT_FOR_TIMEOUT=60
       - TZ=Europe/Kiev
@@ -114,7 +114,7 @@ services:
       - CamundaUrl=http://camunda-engine1:8080/engine-rest
       - RedisUrls=$REDIS_PORTS
       - workerId=worker1
-      - JobsToActivate=200
+      - JobsToActivate=500
     volumes:
       - ./logs:/logs
       - ./.env:/app/.env:ro
@@ -139,7 +139,7 @@ services:
       - CamundaUrl=http://camunda-engine2:8080/engine-rest
       - RedisUrls=$REDIS_PORTS
       - workerId=worker2
-      - JobsToActivate=200
+      - JobsToActivate=500
     volumes:
       - ./logs:/logs
       - ./.env:/app/.env:ro
@@ -156,7 +156,7 @@ services:
     container_name: camunda-plugins-db-$ENVIRONMENT
     ports:
       - $DB_PORT:5432
-    command: postgres -c max_connections=500
+    command: postgres -c max_connections=2000
                       -c shared_buffers=1GB
                       -c effective_cache_size=1536MB
                       -c maintenance_work_mem=256MB
