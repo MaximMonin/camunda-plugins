@@ -20,9 +20,9 @@ service/deploy.sh - deploy models
 test/service/*.sh - Run tests, speed tests, stress tests   
 
 ## InternalService [(Documentation)](doc/InternalService.md) 
-It is Nodejs example service that consists some kernel systemwide utils.
+It is Nodejs example service that consists some kernel systemwide utils.   
 
-Some params in .env file:
+Some params in .env file:   
 **(Camunda Client log level)**   
 LogLevel=info   
 **(Long polling for workers once in N ms, default 60 sec)**   

@@ -114,7 +114,7 @@ Method used to send file to telegram channel
 Input parameters:   
 chat_id - telegram channel   
 filename - name of sent file  
-data - file data as link to redis cache object. Result of methods excel.Create or file.Read (from container) can be passed as data input parameter   
+data - file data as link to redis cache object. Result of method excel.Create can be passed as data input parameter   
 Output parameters: none   
 
 ### email
