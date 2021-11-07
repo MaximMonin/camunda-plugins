@@ -18,3 +18,31 @@ start.sh / stop.sh - Start and stop Service
 Check .env file to configure passwords and ports   
 service/deploy.sh - deploy models   
 test/service/*.sh - Run tests, speed tests, stress tests   
+
+## InternalService [(Documentation)](doc/InternalService.md) 
+It is Nodejs example service that consists some kernel systemwide utils.
+
+Some params in .env file:
+**(Camunda Client log level)**   
+LogLevel=info   
+**(Long polling for workers once in N ms, default 60 sec)**   
+LongPolling=60000   
+**(Default lock duration for external task, default 50 sec)**   
+lockDuration=50000   
+**(rotate logfile days)**   
+maxLogDays=14   
+**(rotate error logfile days)**   
+maxLogErrDays=60   
+**(keep redis cache in Hours)**   
+redisCacheHours=24   
+
+**(Telegram bot who sends messages)**   
+TELEGRAM_BOT   
+**(Mail server and mail credetials for user who sends email from Camunda)**   
+MAIL_SERVER   
+MAIL_PORT   
+MAIL_ACCOUNT   
+MAIL_PASSWORD   
+MAIL_FROM   
+**(Secret CryptoKey to encrypt/decrypt secret info)**   
+CRYPTO_KEY   
