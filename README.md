@@ -2,9 +2,11 @@
 
 Useful Camunda plugins for Camunda 7.14+ in docker Environment   
 
-Included:   
-Camunda Cockpit History Plugins:   
+Included java script plugins:   
+1. Camunda Cockpit History Plugins:   
 https://github.com/datakurre/camunda-cockpit-plugins/   
+2. Camunda Cockpit Process Statistics Plugin:   
+https://github.com/MaximMonin/camunda-process-statistics-plugin/   
 
 Java .jar plugins in docker image:
 1. Incident plugin - Calls Service.IncidentHandler model to notify About all Camunda Incidents to telegram   

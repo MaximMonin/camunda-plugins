@@ -24,7 +24,8 @@ export default {
     'scripts/definition-historic-activities.js',
     'scripts/instance-historic-activities.js',
     'scripts/instance-route-history.js',
-    'scripts/tasklist-audit-log.js'
+    'scripts/tasklist-audit-log.js',
+    'scripts/process-statistics.js'
   //  'scripts/instance-tab-modify.js'
   ],
   // requireJsConfig: {

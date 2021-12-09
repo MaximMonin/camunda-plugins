@@ -97,7 +97,7 @@ env object with 2 fields:
 - env.server - https server link of current environment, used to generate links to processes   
 
 ### processes.StopOther
-Method uses to stop all other processes of current type of process, except current. If some processes were started earlier but still running and we do need result from it, we can kill (stop) them by using this method.   
+Method uses to stop all other processes of current type of process, except current. If some processes were started earlier but still running and we dont need result from it, we can kill (stop) them by using this method.   
 Input parameters: none - running processes auto calculated by id of current process and type of current process   
 Output parameters: none   
 
