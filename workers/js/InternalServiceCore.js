@@ -223,13 +223,13 @@ class InternalServiceCore {
       }
       if (rule.includes('.')) {
         var parts = rule.split('.');
-        if (this.params[parts[0]][parts[1]]) {
+        if (this.params[parts[0]][parts[1]] || this.params[parts[0]][parts[1]] === false) {
           continue;
         }
         return 'No params: ' + rule;
       }
       else {
-        if (this.params[rule]) {
+        if (this.params[rule] || this.params[rule] === false) {
           continue;
         }
         return 'No params: ' + rule;
