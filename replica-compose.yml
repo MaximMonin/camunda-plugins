@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   db_replica:
-    image: postgres:14.0
+    image: postgres:14.1
     restart: always
     container_name: camunda-plugins-db-replica-$ENVIRONMENT
     depends_on:

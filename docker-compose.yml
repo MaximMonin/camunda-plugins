@@ -151,7 +151,7 @@ services:
       - "camunda2:$CAMUNDA2"
 
   db:
-    image: postgres:14.0
+    image: postgres:14.1
     restart: always
     container_name: camunda-plugins-db-$ENVIRONMENT
     ports:
@@ -196,7 +196,7 @@ services:
       default:
 
   pgadmin:
-    image: dpage/pgadmin4:5.4
+    image: dpage/pgadmin4:6.2
     container_name: camunda-plugins-pgadmin-$ENVIRONMENT
     restart: always
     depends_on:
