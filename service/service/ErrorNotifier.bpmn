@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0tvi7bp" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0tvi7bp" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.11.1">
   <bpmn:process id="Service.ErrorNotifier" name="Service: Error Notifier" isExecutable="true" camunda:jobPriority="5" camunda:historyTimeToLive="14" camunda:taskPriority="5">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0bg1mla</bpmn:outgoing>
@@ -67,6 +67,7 @@ if (error.processId) {
   message = message + "&lt;a href='" + link + "'&gt;" + link + "&lt;/a&gt;&lt;pre&gt; &lt;/pre&gt;"
 }
 text = error.message.take(500);
+text = text.replaceAll('&lt;', ' ').replaceAll('&gt;', ' ');
 
 execution.setVariable("message",message.concat(text));</bpmn:script>
     </bpmn:scriptTask>
@@ -105,6 +106,14 @@ errorType(opt)</bpmn:text>
   <bpmn:error id="Error_15u4hr9" name="telegram-error" errorCode="telegram-error" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Service.ErrorNotifier">
+      <bpmndi:BPMNEdge id="Flow_0c3077e_di" bpmnElement="Flow_0c3077e">
+        <di:waypoint x="810" y="177" />
+        <di:waypoint x="850" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0np2z48_di" bpmnElement="Flow_0np2z48">
+        <di:waypoint x="670" y="177" />
+        <di:waypoint x="710" y="177" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0lswq6k_di" bpmnElement="Flow_0lswq6k">
         <di:waypoint x="520" y="177" />
         <di:waypoint x="570" y="177" />
@@ -126,34 +135,8 @@ errorType(opt)</bpmn:text>
         <di:waypoint x="215" y="177" />
         <di:waypoint x="280" y="177" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0np2z48_di" bpmnElement="Flow_0np2z48">
-        <di:waypoint x="670" y="177" />
-        <di:waypoint x="710" y="177" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0c3077e_di" bpmnElement="Flow_0c3077e">
-        <di:waypoint x="810" y="177" />
-        <di:waypoint x="850" y="177" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="159" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1j5pev5_di" bpmnElement="resource.Lock">
-        <dc:Bounds x="280" y="137" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0o0zk4m_di" bpmnElement="formatMessage">
-        <dc:Bounds x="570" y="137" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0nmo1lb_di" bpmnElement="environment.Get">
-        <dc:Bounds x="420" y="137" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="TextAnnotation_13u8llo_di" bpmnElement="TextAnnotation_13u8llo">
-        <dc:Bounds x="220" y="40" width="100" height="82" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1dxw1qn_di" bpmnElement="telegramChannel">
-        <dc:Bounds x="710" y="137" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_19f7v4j_di" bpmnElement="telegramSend">
-        <dc:Bounds x="850" y="137" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0fhgxca_di" bpmnElement="ResultOK">
         <dc:Bounds x="1012" y="159" width="36" height="36" />
@@ -161,22 +144,40 @@ errorType(opt)</bpmn:text>
           <dc:Bounds x="1023" y="202" width="15" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1j5pev5_di" bpmnElement="resource.Lock">
+        <dc:Bounds x="280" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_19f7v4j_di" bpmnElement="telegramSend">
+        <dc:Bounds x="850" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0o0zk4m_di" bpmnElement="formatMessage">
+        <dc:Bounds x="570" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0nmo1lb_di" bpmnElement="environment.Get">
+        <dc:Bounds x="420" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0zudqqd_di" bpmnElement="ErrorNotifier-error">
         <dc:Bounds x="1012" y="312" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1017" y="355" width="26" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Association_1aubfqz_di" bpmnElement="Association_1aubfqz">
-        <di:waypoint x="206" y="162" />
-        <di:waypoint x="230" y="122" />
-      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_1dxw1qn_di" bpmnElement="telegramChannel">
+        <dc:Bounds x="710" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_13u8llo_di" bpmnElement="TextAnnotation_13u8llo">
+        <dc:Bounds x="220" y="40" width="100" height="82" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1k8ron0_di" bpmnElement="telegram-error">
         <dc:Bounds x="882" y="199" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="857" y="233" width="26" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_1aubfqz_di" bpmnElement="Association_1aubfqz">
+        <di:waypoint x="206" y="162" />
+        <di:waypoint x="230" y="122" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
