@@ -9,3 +9,10 @@ COPY scripts/* /camunda/webapps/camunda/app/cockpit/scripts/
 
 # Custom process engine plugins
 COPY plugins/* /camunda/lib/
+
+# session management
+RUN wget https://repo1.maven.org/maven2/org/redisson/redisson-tomcat-9/3.16.7/redisson-tomcat-9-3.16.7.jar -P lib/ && \
+    wget https://repo1.maven.org/maven2/org/redisson/redisson-all/3.16.7/redisson-all-3.16.7.jar -P lib/
+COPY redisson.conf /camunda/conf/
+COPY context.xml  /camunda/webapps/camunda/META-INF/
+COPY context.xml  /camunda/webapps/camunda-welcome/META-INF/
