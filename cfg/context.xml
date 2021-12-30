@@ -26,7 +26,7 @@
 
     <Manager className="org.redisson.tomcat.RedissonSessionManager"
       configPath="${catalina.base}/conf/redisson.conf"
-      readMode="REDIS"
+      readMode="MEMORY"
       updateMode="DEFAULT"
       broadcastSessionEvents="false"
       keyPrefix=""
