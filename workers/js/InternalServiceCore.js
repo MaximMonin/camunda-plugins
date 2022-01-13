@@ -431,7 +431,7 @@ class InternalServiceCore {
       logger.log({level: 'info', message: {type: 'encrypt', sequenceId: sequenceId}});
       try {
         data = service.params.text;
-        if (data.includes ('redis:')) {
+        if (data.startsWith('redis:')) {
           key = data.substring(6);
           data = await service.redis.getAsync (key);
         }
@@ -450,7 +450,7 @@ class InternalServiceCore {
       logger.log({level: 'info', message: {type: 'decrypt', sequenceId: sequenceId}});
       try {
         data = service.params.text;
-        if (data.includes ('redis:')) {
+        if (data.startsWith('redis:')) {
           key = data.substring(6);
           data = await service.redis.getAsync (key);
         }
@@ -500,7 +500,7 @@ class InternalServiceCore {
         if (service.params.attachments) {
           for (var j=0; j < service.params.attachments.length; j++) {
             var attachment = service.params.attachments[j];
-            if (attachment.content && attachment.content.includes('redis:')) {
+            if (attachment.content && attachment.content.startsWith('redis:')) {
               attachment.content = await service.redis.getAsync (attachment.content.substring(6));
               attachment['encoding'] = 'base64';
             }
@@ -550,11 +550,11 @@ class InternalServiceCore {
 
     // Check for redis caching (filedata or passwords)
     try {
-      if (data && data.data && data.data.includes ('redis:')) {
+      if (data && data.data && data.data.startsWith('redis:')) {
         key = data.data.substring(6);
         data.data = await service.redis.getAsync (key);
       }
-      if (data && data.password && data.password.includes ('redis:')) {
+      if (data && data.password && data.password.startsWith('redis:')) {
         key = data.password.substring(6);
         data.password = await service.redis.getAsync (key);
       }

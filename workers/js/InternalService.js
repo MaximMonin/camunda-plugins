@@ -83,7 +83,7 @@ function handleCallback (service, data)
         result = JSON.stringify(result);
       }
       // Redis caching to reduce variable size and camunda db size
-      if (service.useRedisCache && ! result.includes('redis:')) {
+      if (service.useRedisCache && ! result.startsWith('redis:')) {
         var key = uuidv4();
         service.redis.set ( key, result, redisCacheHours * 3600, function(err, res) {
           // return redis-key instead data
