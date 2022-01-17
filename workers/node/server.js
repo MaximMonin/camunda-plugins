@@ -51,13 +51,18 @@ const sslValidation = new SslInterceptor({ca: caRoot});
 // for fast parallel processing it is critical to reduse polling internal to low value
 // create a Client instance with custom configuration
 const config = { baseUrl: url, workerId: workerId, use: logger.level(loglevel), asyncResponseTimeout: longPolling, lockDuration: lockDuration,
-  maxTasks: maxTasks, interval: 5, autoPoll: false, interceptors: [basicAuthentication /*, sslValidation */] };
+  maxTasks: maxTasks, interval: 10, autoPoll: false, interceptors: [basicAuthentication /*, sslValidation */] };
 const client = new Client(config);
 const redis = new Redis (RedisUrls);
 const mailer = new Mailer ();
 const worker = new Worker (redis, mailer);
 
-const topicSubscription = client.subscribe(tasktype, {}, async function ({task, taskService}) {
+var options = {};
+if (tasktype == 'InternalService') {
+  options = {variables: ['method', 'params', 'timeout', 'url', 'lock', 'message']};
+}
+
+const topicSubscription = client.subscribe(tasktype, options, async function ({task, taskService}) {
 //  console.log (JSON.stringify(task));
 
   worker.router (task, taskService);
