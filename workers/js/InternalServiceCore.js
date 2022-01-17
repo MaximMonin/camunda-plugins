@@ -272,9 +272,9 @@ class InternalServiceCore {
       return;
     }
     if (this.method == 'resource.Unlock') {
-      var lockkey = JSON.parse(this.task.variables.get('lock'));
-      logger.log({level: 'info', message: {type: 'UNLOCK', resource: lockkey.resource, sequenceId: sequenceId}});
       try {
+        var lockkey = JSON.parse(this.task.variables.get('lock'));
+        logger.log({level: 'info', message: {type: 'UNLOCK', resource: lockkey.resource, sequenceId: sequenceId}});
         var lock = new Redlock.Lock(this.redis.redlock, lockkey.resource, lockkey.value, lockkey.timeout * 1000);
         lock.unlock(function(err) {
           console.log (err);
