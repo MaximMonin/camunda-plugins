@@ -131,7 +131,12 @@ function handleCallback (service, data)
     service.taskService.handleBpmnError(service.task, service.method + '-error', service.error, service.processVariables);
   }
   else {
-    service.taskService.handleFailure(service.task, { retries: 1, retryTimeout: 1000 });
+    if (data.timeout) {
+      service.taskService.handleFailure(service.task, { retries: data.timeout.retries, retryTimeout: 1000 });
+    }
+    else {
+      service.taskService.handleFailure(service.task, { retries: 1, retryTimeout: 1000 });
+    }
   }
 
   // When Commiting Error or Complete can be Optimistic Locking error.

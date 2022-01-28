@@ -131,6 +131,7 @@ class InternalServiceCore {
     this.processVariables = new Variables();
     this.localVariables = new Variables();
     this.error = '';
+    this.timeoutRepeat = true;
 
     try {
       var params = task.variables.get('params');
@@ -167,6 +168,11 @@ class InternalServiceCore {
     for(i=0; i < ServiceRules.length; i++) {
       if (ServiceRules[i].method == method && ServiceRules[i].url) {
         this.url = ServiceRules[i].url;
+      }
+    }
+    for(i=0; i < ServiceRules.length; i++) {
+      if (ServiceRules[i].method == method && ServiceRules[i].timeoutRepeat === false) {
+        this.timeoutRepeat = ServiceRules[i].timeoutRepeat;
       }
     }
 
@@ -609,6 +615,16 @@ class InternalServiceCore {
         errdata = error.message;
       }
       logger.log({level: 'error', message: {type: 'RESPONSE', id: id, process: service.task.processDefinitionKey, method: service.method, error: errdata, responsetime: service.responsetime, sequenceId: sequenceId}});
+
+      var retries = 2;
+      if (service.task.retries) { // default value == null
+        retries = service.task.retries - 1;
+      }
+      // max 3 attempts repeating request timeout
+      if (service.timeoutRepeat && typeof errdata == 'string' && errdata.includes('Service request timeout:') && retries > 0 ) {
+        callback (service, {timeout: {message: 'Repeat again (timeout occurs)', retries: retries }});
+        return;
+      }
 
       callback (service, {error: errdata});
     });
