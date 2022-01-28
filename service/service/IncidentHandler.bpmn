@@ -39,7 +39,7 @@ else {
 }
 link = "https://" + env.prop("server").value() + "/camunda/app/cockpit/default/#/process-instance/" + incident.processId;
 message = message + "&lt;/pre&gt;&lt;a href='" + link + "'&gt;" + link + "&lt;/a&gt;&lt;pre&gt; &lt;/pre&gt;"
-text = incident.message.take(500);
+text = incident.message.take(3000);
 message.concat(text);</camunda:script>
           </camunda:inputParameter>
         </camunda:inputOutput>

@@ -66,7 +66,7 @@ if (error.processId) {
   link = "https://" + env.prop("server").value() + "/camunda/app/cockpit/default/#/history/process-instance/" + error.processId;
   message = message + "&lt;a href='" + link + "'&gt;" + link + "&lt;/a&gt;&lt;pre&gt; &lt;/pre&gt;"
 }
-text = error.message.take(500);
+text = error.message.take(3000);
 text = text.replaceAll('&lt;', ' ').replaceAll('&gt;', ' ');
 
 execution.setVariable("message",message.concat(text));</bpmn:script>
