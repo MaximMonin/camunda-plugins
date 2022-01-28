@@ -6921,6 +6921,8 @@ var post = function (api, path, params, payload) { return __awaiter(void 0, void
 
 var tableMessage = 'Display Max:';
 var statMessage = 'Finished Instances to analyze:';
+var filterMessage = 'Filter by variable:';
+var valueMessage = 'Value:';
 var items = [
     { title: 'Running Process Instances', defaultMaxResults: 10, selectMaxResult: [10, 100, 1000], selectMessage: tableMessage,
         path: '/history/process-instance', sortBy: 'startTime', options: { unfinished: true }, type: 'table', links: '/process-instance/' },
@@ -6942,6 +6944,8 @@ var TableForm = function (_a) {
     var _d = react.exports.useState(items[0].defaultMaxResults), maxResults = _d[0], setMaxResults = _d[1];
     var _e = react.exports.useState(items[0].selectMessage), selectMessage = _e[0], setSelectMessage = _e[1];
     var _f = react.exports.useState(items[0].selectMaxResult), selectMaxResult = _f[0], setSelectMaxResults = _f[1];
+    var _g = react.exports.useState(''), filterVar = _g[0], setFilterVar = _g[1];
+    var _h = react.exports.useState(''), filterValue = _h[0], setFilterValue = _h[1];
     // FETCH
     react.exports.useEffect(function () {
         (function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -6949,7 +6953,7 @@ var TableForm = function (_a) {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        options = items[active].options;
+                        options = JSON.parse(JSON.stringify(items[active].options));
                         if (items[active].startedAfter) {
                             if (items[active].startedAfter == 'hourAgo') {
                                 /* @ts-ignore */
@@ -6964,6 +6968,30 @@ var TableForm = function (_a) {
                                 options['startedAfter'] = new Date(new Date() - 1000 * 3600 * 24 * 7).toISOString().replace('Z', '+0000');
                             }
                         }
+                        if (filterVar != '' && filterValue != '') {
+                            if (filterVar == 'Process Name') {
+                                /* @ts-ignore */
+                                options['processDefinitionName'] = filterValue;
+                            }
+                            else if (filterVar == 'Instance ID') {
+                                /* @ts-ignore */
+                                options['processInstanceId'] = filterValue;
+                            }
+                            else if (filterVar == 'Business Key') {
+                                /* @ts-ignore */
+                                options['processInstanceBusinessKey'] = filterValue;
+                            }
+                            else {
+                                /* @ts-ignore */
+                                options['variables'] = [
+                                    {
+                                        'name': filterVar,
+                                        'operator': 'eq',
+                                        'value': filterValue
+                                    }
+                                ];
+                            }
+                        }
                         _a = setInstances;
                         return [4 /*yield*/, post(api, items[active].path, { maxResults: String(maxResults) }, JSON.stringify(__assign$1({ sortBy: items[active].sortBy, sortOrder: 'desc' }, options)))];
                     case 1:
@@ -6972,7 +7000,7 @@ var TableForm = function (_a) {
                 }
             });
         }); })();
-    }, [active, maxResults]);
+    }, [active, maxResults, filterVar, filterValue]);
     var tabs = React.createElement("div", null,
         React.createElement("ul", { className: 'nav nav-tabs' },
             items.map(function (n, i) { return (React.createElement("button", { className: "tablinks ".concat(i === active ? 'active' : ''), style: { border: 'none', background: 'white' }, onClick: function (e) {
@@ -6982,8 +7010,12 @@ var TableForm = function (_a) {
                     setSelectMaxResults(items[+e.target.dataset.index].selectMaxResult);
                     setActive(+e.target.dataset.index);
                 }, "data-index": i }, n.title)); }),
-            React.createElement("a", { style: { marginLeft: '50px', color: 'black' } }, selectMessage),
-            React.createElement("select", { value: maxResults, style: { marginLeft: '10px' }, onChange: function (e) { setInstances([]); setMaxResults(e.target.value); } }, selectMaxResult.map(function (n, i) { return (React.createElement("option", null, selectMaxResult[i])); }))),
+            React.createElement("a", { style: { marginLeft: '30px', color: 'black' } }, selectMessage),
+            React.createElement("select", { value: maxResults, style: { marginLeft: '5px' }, onChange: function (e) { setInstances([]); setMaxResults(e.target.value); } }, selectMaxResult.map(function (n, i) { return (React.createElement("option", null, selectMaxResult[i])); })),
+            React.createElement("a", { style: { marginLeft: '20px', color: 'black' } }, filterMessage),
+            React.createElement("input", { value: filterVar, size: 20, style: { marginLeft: '5px' }, onChange: function (e) { setInstances([]); setFilterVar(e.target.value); } }),
+            React.createElement("a", { style: { marginLeft: '10px', color: 'black' } }, valueMessage),
+            React.createElement("input", { value: filterValue, size: 25, style: { marginLeft: '5px' }, onChange: function (e) { setInstances([]); setFilterValue(e.target.value); } })),
         instances.length && items[active].type == 'table' ? React.createElement(HistoryProcessTable, { title: items[active].title, maxResults: maxResults, links: items[active].links, instances: instances }) : null,
         instances.length && items[active].type == 'stats' ? React.createElement(StatisticsProcessTable, { title: items[active].title, maxResults: maxResults, instances: instances }) : null,
         !instances.length ? React.createElement("div", null,
