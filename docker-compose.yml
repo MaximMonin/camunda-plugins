@@ -24,7 +24,6 @@ services:
           - camunda-gateway
     extra_hosts:
       - "camunda:$CAMUNDA"
-      - "camunda2:$CAMUNDA2"
 
   camunda-engine1:
     image: camunda-plugins
@@ -61,7 +60,6 @@ services:
       - JMX_PROMETHEUS=false
     extra_hosts:
       - "camunda:$CAMUNDA"
-      - "camunda2:$CAMUNDA2"
 
   camunda-engine2:
     image: camunda-plugins
@@ -98,7 +96,6 @@ services:
       - JMX_PROMETHEUS=false
     extra_hosts:
       - "camunda:$CAMUNDA"
-      - "camunda2:$CAMUNDA2"
 
   worker1:
     image: camunda-plugins-worker
@@ -123,7 +120,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
     extra_hosts:
       - "camunda:$CAMUNDA"
-      - "camunda2:$CAMUNDA2"
 
   worker2:
     image: camunda-plugins-worker
@@ -148,10 +144,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
     extra_hosts:
       - "camunda:$CAMUNDA"
-      - "camunda2:$CAMUNDA2"
 
   db:
-    image: postgres:14.1
+    image: postgres:14.2
     restart: always
     container_name: camunda-plugins-db-$ENVIRONMENT
     ports:
