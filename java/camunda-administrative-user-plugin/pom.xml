@@ -12,7 +12,7 @@
     <name>Camunda BPM Administrative User Plugin</name>
 
     <properties>
-      <version.camunda-bpm>7.16.0</version.camunda-bpm>
+      <version.camunda-bpm>7.17.0</version.camunda-bpm>
       <version.java>11.0.9</version.java>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <maven.compiler.source>11</maven.compiler.source>
