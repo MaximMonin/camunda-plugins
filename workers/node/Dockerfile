@@ -1,4 +1,4 @@
-FROM node:14.19.0-buster-slim
+FROM node:16.14.2-bullseye-slim
 
 RUN mkdir -p /app
 COPY ./package.json /app/package.json
