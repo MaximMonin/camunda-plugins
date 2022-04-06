@@ -2,7 +2,6 @@
 
 const { v4: uuidv4 } = require('uuid');
 const { InternalServiceCore } = require ('./InternalServiceCore.js');
-const {getVariableType} = require('./camundaUtils');
 const redisCacheHours = process.env.redisCacheHours || 1;
 
 function InternalService (task, taskService, worker)
@@ -88,18 +87,18 @@ function handleCallback (service, data)
         service.redis.set ( key, result, redisCacheHours * 3600, function(err, res) {
           // return redis-key instead data
           if (res) {
-            service.localVariables.setTyped('result', { type: 'string', value: 'redis:' + key, valueInfo: {transient: true}});
+            service.localVariables.setTransient('result', 'redis:' + key);
             service.taskService.complete(service.task, service.processVariables, service.localVariables);
           }
           else {
             console.log (err);
-            service.localVariables.setTyped('result', { type: getVariableType(result), value: result, valueInfo: {transient: true}});
+            service.localVariables.setTransient('result', result);
             service.taskService.complete(service.task, service.processVariables, service.localVariables);
           }
         });
         return;
       }
-      service.localVariables.setTyped('result', { type: getVariableType(result), value: result, valueInfo: {transient: true}});
+      service.localVariables.setTransient('result', result);
     }
     service.taskService.complete(service.task, service.processVariables, service.localVariables);
   }
@@ -114,7 +113,7 @@ function handleCallback (service, data)
         if (JSON.stringify(data.error).includes (service.ignoreErrors[i])) {
           data.result = {};
           if (service.resultReturn) {
-            service.localVariables.setTyped('result', { type: 'string', value: JSON.stringify(data.result), valueInfo: {transient: true}});
+            service.localVariables.setTransient('result', JSON.stringify(data.result));
           }
           service.taskService.complete(service.task, service.processVariables, service.localVariables);
           return;
