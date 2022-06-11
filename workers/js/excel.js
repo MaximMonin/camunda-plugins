@@ -25,6 +25,10 @@ async function excelCreate (service, sheets, data)
       sheetData = JSON.parse (redisData);
     }
 
+    if (! (sheetData instanceof Array)) {
+      sheetData = [sheetData];
+    }
+
     var sheetColumns = [];
     for (var j=0; j<sheetData.length; j++) {
       for (let [key] of Object.entries(sheetData[j])) {
