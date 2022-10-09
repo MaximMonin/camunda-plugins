@@ -12,9 +12,9 @@
   <name>Camunda Incident Process engine plugin</name>
 
   <properties>
-      <version.camunda-bpm>7.17.0</version.camunda-bpm>
-      <version.h2>2.0.206</version.h2>
-      <version.java>11.0.9</version.java>
+      <version.camunda-bpm>7.18.0</version.camunda-bpm>
+      <version.h2>2.1.214</version.h2>
+      <version.java>11.0.15</version.java>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <maven.compiler.source>11</maven.compiler.source>
       <maven.compiler.target>11</maven.compiler.target>
@@ -32,7 +32,7 @@
             <dependency>
                 <groupId>org.camunda.bpm.extension</groupId>
                 <artifactId>camunda-bpm-assert</artifactId>
-                <version>13.0.0</version>
+                <version>15.0.0</version>
             </dependency>
         </dependencies>
   </dependencyManagement>

@@ -64395,7 +64395,9 @@ var VariablesTable = function (_a) {
             accessor: 'createTime',
             Cell: function (_a) {
                 var value = _a.value;
-                return React.createElement(Clippy, { value: value }, value.split('.')[0]);
+                return value
+                    ? (function (value) { return (React.createElement(Clippy, { value: value.format('YYYY-MM-DDTHH:mm:ss') }, value.format('YYYY-MM-DDTHH:mm:ss'))); })(moment(value))
+                    : value;
             },
         },
     ]; }, []);
