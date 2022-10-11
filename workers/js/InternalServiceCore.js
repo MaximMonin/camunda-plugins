@@ -127,7 +127,6 @@ class InternalServiceCore {
     if (task.businessKey) {
       this.sequenceId = task.businessKey;
     }
-    this.defaultHandler = this.taskService.error;
     this.processVariables = new Variables();
     this.localVariables = new Variables();
     this.error = '';

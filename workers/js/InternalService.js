@@ -145,8 +145,9 @@ function handleCallback (service, data)
   {
 //    console.log (e);
     if (service.maxErrors <= 0) {
-      service.taskService.error = service.defaultHandler;
-      service.taskService.error (event, task, e);
+      if (service.taskService.defaultErrorHandler) {
+        service.taskService.defaultErrorHandler (event, task, e);
+      }
       return;
     }
     service.maxErrors = service.maxErrors - 1;

@@ -53,6 +53,7 @@ const sslValidation = new SslInterceptor({ca: caRoot});
 const config = { baseUrl: url, workerId: workerId, use: logger.level(loglevel), asyncResponseTimeout: longPolling, lockDuration: lockDuration,
   maxTasks: maxTasks, interval: 10, autoPoll: false, interceptors: [basicAuthentication /*, sslValidation */] };
 const client = new Client(config);
+client.taskService.defaultErrorHandler = client.taskService.error;
 const redis = new Redis (RedisUrls);
 const mailer = new Mailer ();
 const worker = new Worker (redis, mailer);
