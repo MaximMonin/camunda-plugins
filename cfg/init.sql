@@ -1,4 +1,4 @@
 CREATE USER camunda PASSWORD 'camunda';
 ALTER USER camunda CREATEDB REPLICATION;
-CREATE DATABASE camunda ENCODING = 'unicode';
+CREATE DATABASE camunda WITH OWNER camunda ENCODING = 'unicode';
 GRANT ALL PRIVILEGES ON DATABASE camunda TO camunda;
