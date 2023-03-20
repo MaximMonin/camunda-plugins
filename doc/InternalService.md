@@ -13,6 +13,7 @@ Internal service has many systemwide methods to support business processes:
 **excel.Create** - Create Excel xlsx file from data in many temp tables   
 
 **null** - Do nothing, special method used in tests   
+**file.Remove** - Remove local file   
 **environment.Get** - Return environment (production, stage, development)   
 **processes.StopOther** - Stop all other processes except of current process (kill other of this type)   
 
@@ -86,6 +87,12 @@ data - link to redis cache object that keeps generated xlsx file
 ### null
 Method used for tests, do nothing   
 Input parameters: none   
+Output parameters: none   
+
+### file.Remove
+Method used to remove local file   
+Input parameters:   
+file - file name...
 Output parameters: none   
 
 ### environment.Get

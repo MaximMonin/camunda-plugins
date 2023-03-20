@@ -8,6 +8,7 @@ const https = require ('https');
 const httpagent = new http.Agent({ keepAlive: true });
 const httpsagent = new https.Agent({ keepAlive: true, rejectUnauthorized: false });
 const axios = require ('axios'); axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { createLogger, format, transports } = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
@@ -85,6 +86,8 @@ const ServiceRules = [
 
    // Special method to do nothing, just return back. Useful for engine test
    { method: 'null', rules: ''},
+   // Remove local file
+   { method: 'file.Remove', rules: 'file', ignoreErrors: ['no such file or directory']},
 
    // get enviroment variables for current server
    { method: 'environment.Get', rules: '', resultReturn: 'env'},
@@ -255,6 +258,20 @@ class InternalServiceCore {
       callback (service, {result: {}});
       return;
     }
+    if (this.method == 'file.Remove') {
+      try {
+        fs.unlinkSync(service.params.file);
+        logger.log({level: 'info', message: {type: 'FILE.REMOVED', file: service.params.file, sequenceId: sequenceId}});
+        callback (service, {result: {}});
+        return;
+      }
+      catch (error) {
+        logger.log({level: 'error', message: {type: 'FILE.CANT.REMOVE', file: service.params.file, sequenceId: sequenceId}});
+        callback (service, {error: error.message});
+        return;
+      }
+    }
+
     // Special method for locking and unlocking resource
     if (this.method == 'resource.Lock') {
       var lockResource = 'lock';

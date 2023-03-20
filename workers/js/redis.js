@@ -1,7 +1,7 @@
 'use strict';
 
 // Lock and unlock containers with redis redlock
-// Set and Get records to multiplay redis servers
+// Redis operations with many redis servers in parallel
 
 const {createClient} = require('redis');
 const Redlock = require('redlock');
