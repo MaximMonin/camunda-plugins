@@ -23,6 +23,7 @@ Internal service has many systemwide methods to support business processes:
 **generatePassword** - Generate password   
 **encrypt** - Encrypt data with secret key   
 **decrypt** - Decrypt data with secret key   
+**certificateValidTo** - Return expiration date of X509 public certificate   
 
 ## Method description
 ### resource.Lock
@@ -173,3 +174,11 @@ text - encrypted data in hex format
 key - IV to decrypt   
 Output paremeters:   
 data - decrypted string. By default result string go to redis cache for security reason   
+
+### certificateValidTo
+Method used to calculate expiration date of certificate   
+Input parameters:   
+certificate - X509 public certificate   
+convertion (opt) - "base64" - source certificate in base64 form   
+Output paremeters:   
+validTo - certificate expiration date. Error returned if certificate is not valid X509 certificate   

@@ -14,6 +14,7 @@
     </job-acquisition>
     <properties>
       <property name="queueSize">100</property>
+      <property name="corePoolSize">4</property>
       <property name="maxPoolSize">20</property>
     </properties>
   </job-executor>
@@ -27,13 +28,27 @@
       <property name="history">full</property>
       <property name="databaseSchemaUpdate">true</property>
       <property name="authorizationEnabled">true</property>
-      <property name="ensureJobDueDateNotNull">true</property>   
+      <property name="ensureJobDueDateNotNull">true</property>
       <property name="jobExecutorDeploymentAware">false</property>
       <property name="jobExecutorActivate">true</property>
-      <property name="jobExecutorPreferTimerJobs">false</property>   
-      <property name="jobExecutorAcquireByDueDate">false</property>   
+      <property name="jobExecutorAcquireByPriority">false</property>
+      <property name="jobExecutorPreferTimerJobs">false</property>
+      <property name="jobExecutorAcquireByDueDate">false</property>
+      <property name="commandRetries">3</property>
       <property name="tenantCheckEnabled">false</property>
+      <property name="initializeTelemetry">false</property>
+      <property name="telemetryReporterActivate">false</property>
+      <property name="historyCleanupEnabled">true</property>
+      <property name="historyCleanupStrategy">removalTimeBased</property>
       <property name="historyCleanupBatchWindowStartTime">00:01</property>
+      <property name="historyCleanupBatchWindowEndTime">08:00</property>
+      <property name="historyCleanupDegreeOfParallelism">1</property>
+      <property name="historyCleanupBatchSize">100</property>
+      <property name="historyTimeToLive">P14D</property>
+      <property name="batchOperationHistoryTimeToLive">P14D</property>
+      <property name="historyCleanupJobLogTimeToLive">P90D</property>
+      <property name="taskMetricsEnabled">true</property>
+      <property name="taskMetricsTimeToLive">P90D</property>
     </properties>
 
     <plugins>

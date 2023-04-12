@@ -29,7 +29,13 @@ const decrypt = (hash, iv) => {
   return decrpyted.toString();
 };
 
+const certificateValidTo = (certificate) => {
+  const { validTo } = new crypto.X509Certificate(certificate);
+  return new Date(validTo);
+}
+
 module.exports = {
     encrypt,
-    decrypt
+    decrypt,
+    certificateValidTo
 };

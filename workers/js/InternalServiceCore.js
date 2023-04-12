@@ -2,7 +2,7 @@
 
 const { Variables } = require('camunda-external-task-client-js');
 const { excelCreate } = require ('./excel.js');
-const { encrypt, decrypt } = require ('./crypto.js');
+const { encrypt, decrypt, certificateValidTo } = require ('./crypto.js');
 const http = require ('http');
 const https = require ('https');
 const httpagent = new http.Agent({ keepAlive: true });
@@ -45,6 +45,9 @@ const ignorePrivate = format((info) => {
     }
     if (data.params.data) {
       data.params.data = 'data...(omited)';
+    }
+    if (data.params.certificate) {
+      data.params.certificate = 'certificate...(omited)';
     }
   }
   catch {
@@ -107,6 +110,7 @@ const ServiceRules = [
    // encrypt/decrypt sensetive data like passwords
    { method: 'encrypt', rules: 'text,key', resultReturn: 'data', useRedisCache: true},
    { method: 'decrypt', rules: 'text,key', resultReturn: 'data', useRedisCache: true},
+   { method: 'certificateValidTo', rules: 'certificate', resultReturn: 'validTo', useRedisCache: false},
 ];
 
 
@@ -489,6 +493,29 @@ class InternalServiceCore {
       }
       return;
     }
+    if (this.method == 'certificateValidTo') {
+      logger.log({level: 'info', message: {type: 'certificateValidTo', sequenceId: sequenceId}});
+      try {
+        data = service.params.certificate;
+        if (data.startsWith('redis:')) {
+          key = data.substring(6);
+          data = await service.redis.getAsync (key);
+        }
+        if (service.params.conversion && service.params.conversion.includes ('base64')) {
+          data = Buffer.from(data, 'base64').toString();
+        }
+        let validTo = certificateValidTo (data);
+        logger.log({level: 'info', message: {type: 'certificateValidTo-done', sequenceId: sequenceId}});
+        callback (service, {result: {validTo: validTo}});
+      }
+      catch (e) {
+        console.log (e);
+        logger.log({level: 'info', message: {type: 'certificateValidTo-error', sequenceId: sequenceId}});
+        callback (service, {error: 'Not valid X509 certificate'});
+      }
+      return;
+    }
+
 
     // stop other processes of this type except current process
     if (this.method == 'processes.StopOther') {
