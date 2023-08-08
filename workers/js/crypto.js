@@ -29,13 +29,41 @@ const decrypt = (hash, iv) => {
   return decrpyted.toString();
 };
 
-const certificateValidTo = (certificate) => {
-  const { validTo } = new crypto.X509Certificate(certificate);
-  return new Date(validTo);
+const certificateData = (certificate) => {
+  const data = new crypto.X509Certificate(certificate);
+  let obj = {
+    ca: data.ca,
+    subject: subjectObj (data.subject),
+    subjectAltName: data.subjectAltName,
+    issuer: subjectObj (data.issuer),
+    infoAccess: data.infoAccess,
+    validFrom: new Date(data.validFrom),
+    validTo: new Date(data.validTo),
+    fingerprint: data.fingerprint,
+    fingerprint256: data.fingerprint256,
+    fingerprint512: data.fingerprint512,
+    keyUsage: data.keyUsage,
+    serialNumber: data.serialNumber
+  };
+  return obj;
+};
+
+const subjectObj = (subject) => {
+  let data = subject.split('\n');
+  let obj = {};
+  for (let i = 0; i<data.length; i++) {
+    let key = data[i].split('=')[0];
+    let value = '';
+    if (data[i].split('=').length > 1) {
+      value = data[i].split('=')[1];
+    }
+    obj[key] = value;
+  }
+  return obj;
 }
 
 module.exports = {
     encrypt,
     decrypt,
-    certificateValidTo
+    certificateData
 };

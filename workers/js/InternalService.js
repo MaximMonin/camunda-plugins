@@ -65,7 +65,7 @@ function handleCallback (service, data)
 {
   var result;
   service.taskService.error = handleError;
-  if (data.result || data.result === 0) {
+  if (data.result || data.result === 0 || data.result === false) {
     // Special rules for returning specific data
     if (service.resultReturn) {
       if (service.resultReturn == 'json' || service.resultReturn == 'string') {

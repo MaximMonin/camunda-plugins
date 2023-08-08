@@ -19,10 +19,19 @@ async function excelCreate (service, sheets, data)
 
     var sheetData = data[i];
     // Get sheet data from redis cache
-    if (typeof sheetData == 'string' && sheetData.startsWith('redis')) {
+    if (typeof sheetData == 'string' && sheetData.startsWith('redis:')) {
       var key = sheetData.substring(6);
+      var parts = [];
+      // obj.field as sheetData
+      if (key.includes('.')) {
+        parts = key.split('.');
+        key = parts[0];
+      }
       var redisData = await service.redis.getAsync (key);
       sheetData = JSON.parse (redisData);
+      if (parts.length > 1) {
+        sheetData = sheetData[parts[1]];
+      }
     }
 
     if (! (sheetData instanceof Array)) {
