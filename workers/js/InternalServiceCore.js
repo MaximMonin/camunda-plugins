@@ -112,6 +112,8 @@ const ServiceRules = [
    { method: 'decrypt', rules: 'text,key', resultReturn: 'data', useRedisCache: true},
    // cetrificate data
    { method: 'certificateData', rules: 'certificate', resultReturn: 'data'},
+   // joins chunks into single array
+   { method: 'joinChunks', rules: 'chunks', resultReturn: 'data', useRedisCache: true},
 ];
 
 
@@ -514,13 +516,30 @@ class InternalServiceCore {
           data = Buffer.from(data, 'base64').toString();
         }
         let certdata = certificateData (data);
-        logger.log({level: 'info', message: {type: this.method + '-done', sequenceId: sequenceId}});
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'info', message: {type: this.method + '-done', responsetime: service.responsetime, sequenceId: sequenceId}});
         callback (service, {result: {data: certdata}});
       }
       catch (e) {
         console.log (e);
-        logger.log({level: 'info', message: {type: this.method + '-error', sequenceId: sequenceId}});
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'info', message: {type: this.method + '-error', responsetime: service.responsetime, sequenceId: sequenceId}});
         callback (service, {error: 'Not valid X509 certificate'});
+      }
+      return;
+    }
+    if (this.method == 'joinChunks') {
+      logger.log({level: 'info', message: {type: this.method, params: service.params, sequenceId: sequenceId}});
+      try {
+        let data = await joinChunks(service);
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'info', message: {type: this.method + '-done', responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {result: {data: data}});
+      }
+      catch (e) {
+        service.responsetime = Date.now() - begintime;
+        logger.log({level: 'info', message: {type: this.method + '-error', responsetime: service.responsetime, sequenceId: sequenceId}});
+        callback (service, {error: e});
       }
       return;
     }
@@ -529,7 +548,7 @@ class InternalServiceCore {
     if (this.method == 'processes.StopOther') {
       logger.log({level: 'info', message: {type: 'PROCESSES.STOPOTHER', process: service.task.processDefinitionKey, sequenceId: sequenceId}});
       try {
-        await StopOther(service, service.task.processDefinitionKey, service.processId);
+        await stopOther(service, service.task.processDefinitionKey, service.processId);
         service.responsetime = Date.now() - begintime;
         logger.log({level: 'info', message: {type: 'PROCESSES.STOPEDOTHER', process: service.task.processDefinitionKey, responsetime: service.responsetime, sequenceId: sequenceId}});
         callback (service, {result: {}});
@@ -698,7 +717,7 @@ async function lockTask (service, timeout)
 }
 
 // Stop all other processes except current
-async function StopOther (service, process, processId)
+async function stopOther (service, process, processId)
 {
   var CamundaUrl = service.taskService.api.baseUrl;
   var authCamunda = {
@@ -729,6 +748,23 @@ function genPassword (len) {
 
   for (var i=0; i < len; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+async function joinChunks (service) {
+  let chunks = service.params.chunks;
+  let result = [];
+  for (let i=0; i < chunks.length; i++) {
+    let item = chunks[i];
+    if (typeof item == 'string' && item.startsWith('redis:')) {
+      let key = item.substring(6);
+      item = await service.redis.getAsync (key);
+      item = JSON.parse (item);
+    }
+    for (let j=0; j<item.length; j++) {
+      result.push(item[j]);
+    }
   }
   return result;
 }

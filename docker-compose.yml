@@ -148,7 +148,7 @@ services:
       - "camunda:$CAMUNDA"
 
   db:
-    image: postgres:15.2
+    image: postgres:16.0
     restart: always
     container_name: camunda-plugins-db-$ENVIRONMENT
     ports:
@@ -193,7 +193,7 @@ services:
       default:
 
   pgadmin:
-    image: dpage/pgadmin4:6.21
+    image: dpage/pgadmin4:7.6
     container_name: camunda-plugins-pgadmin-$ENVIRONMENT
     restart: always
     depends_on:
@@ -212,7 +212,7 @@ services:
 
   # odd number of redis for redlock quorum (1 or 3 or more)
   redis1:
-    image: redis:7.0.9
+    image: redis:7.2.1
     container_name: camunda-plugins-redis1-$ENVIRONMENT
     restart: always
     ports:
@@ -228,7 +228,7 @@ services:
     command: [ "redis-server", "/redis.conf" ]
 
   redis2:
-    image: redis:7.0.9
+    image: redis:7.2.1
     container_name: camunda-plugins-redis2-$ENVIRONMENT
     restart: always
     ports:
@@ -244,7 +244,7 @@ services:
     command: [ "redis-server", "/redis.conf" ]
 
   redis3:
-    image: redis:7.0.9
+    image: redis:7.2.1
     container_name: camunda-plugins-redis3-$ENVIRONMENT
     restart: always
     ports:

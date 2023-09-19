@@ -2,28 +2,29 @@
 
 ## Method list
 Internal service has many systemwide methods to support business processes:   
-**resource.Lock** - Locks some resource exclusively, other processes wait until resource locked   
-**resource.Unlock** - Release lock from resource   
+[**resource.Lock**](#resourcelock) - Locks some resource exclusively, other processes wait until resource locked   
+[**resource.Unlock**](#resourceunlock) - Release lock from resource   
 
-**table.AddRows** - Add some data rows to temp table   
-**table.Count** - Returns number of rows in temp table   
-**table.Read** - Read and save in cache all records of temp table as one object, return link to object in cache   
-**cache.Read** - Read data from cache to use data as camunda variable   
+[**table.AddRows**](#tableaddrows) - Add some data rows to temp table   
+[**table.Count**](#tablecount) - Returns number of rows in temp table   
+[**table.Read**](#tableread) - Read and save in cache all records of temp table as one object, return link to object in cache   
+[**cache.Read**](#cacheread) - Read data from cache to use data as camunda variable   
 
-**excel.Create** - Create Excel xlsx file from data in many temp tables   
+[**excel.Create**](#excelcreate) - Create Excel xlsx file from data in many temp tables   
 
-**null** - Do nothing, special method used in tests   
-**file.Remove** - Remove local file   
-**environment.Get** - Return environment (production, stage, development)   
-**processes.StopOther** - Stop all other processes except of current process (kill other of this type)   
+[**null**](#null) - Do nothing, special method used in tests   
+[**file.Remove**](#fileremove) - Remove local file   
+[**environment.Get**](#environmentget) - Return environment (production, stage, development)   
+[**processes.StopOther**](#processesstopother) - Stop all other processes except of current process (kill other of this type)   
 
-**telegram** - Send message to telegram channel   
-**telegram.File** - Send file to telegram channel   
-**email** - Send email   
-**generatePassword** - Generate password   
-**encrypt** - Encrypt data with secret key   
-**decrypt** - Decrypt data with secret key   
-**certificateData** - Return data of X509 public certificate   
+[**telegram**](#telegram) - Send message to telegram channel   
+[**telegram.File**](#telegramfile) - Send file to telegram channel   
+[**email**](#email) - Send email   
+[**generatePassword**](#generatepassword) - Generate password   
+[**encrypt**](#encrypt) - Encrypt data with secret key   
+[**decrypt**](#decrypt) - Decrypt data with secret key   
+[**certificateData**](#certificatedata) - Return data of X509 public certificate   
+[**joinChunks**](#joinchunks) - Join chunks into single array   
 
 ## Method description
 ### resource.Lock
@@ -182,3 +183,10 @@ certificate - X509 public certificate
 convertion (opt) - "base64" - source certificate in base64 form   
 Output paremeters:   
 data - certificate data object including validTo, subject, issuer, etc. Error returned if certificate is not valid X509 certificate   
+
+### joinChunks
+Method used to Join chunks into single array   
+Input parameters:   
+chunks - array of chunks, chunk can be redis cache array   
+Output paremeters:   
+data - new array joined from source chunks into single array   
