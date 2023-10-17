@@ -46,6 +46,9 @@ const ignorePrivate = format((info) => {
     if (data.params.certificate) {
       data.params.certificate = 'certificate...(omited)';
     }
+    if (data.params.text) {
+      data.params.text = 'text...(omited)';
+    }
   }
   catch {
   }
@@ -205,6 +208,14 @@ class InternalServiceCore {
       }
       if (this.params['url']) {
         this.url = this.params['url'];
+      }
+    }
+    catch {
+    }
+    try {
+      let useRedisCache = task.variables.get('useRedisCache');
+      if (useRedisCache) {
+        this.useRedisCache = JSON.parse(useRedisCache);
       }
     }
     catch {

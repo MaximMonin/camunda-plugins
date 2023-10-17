@@ -60,7 +60,7 @@ const worker = new Worker (redis, mailer);
 
 var options = {};
 if (tasktype == 'InternalService') {
-  options = {variables: ['method', 'params', 'timeout', 'url', 'lock', 'message']};
+  options = {variables: ['method', 'params', 'timeout', 'url', 'lock', 'message', 'useRedisCache']};
 }
 
 const topicSubscription = client.subscribe(tasktype, options, async function ({task, taskService}) {
