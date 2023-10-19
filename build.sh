@@ -1,6 +1,6 @@
 #!/bin/bash
 cd cfg
-sudo docker build -t camunda-plugins:latest .
+sudo docker build --network host -t camunda-plugins:latest .
 cd ..
 
 cd workers/node
