@@ -1,4 +1,4 @@
-FROM camunda/camunda-bpm-platform:tomcat-7.19.0
+FROM camunda/camunda-bpm-platform:tomcat-7.20.0
 RUN rm -r webapps/camunda-invoice webapps/examples && \
     rm -f lib/postgresql-42.5.4.jar && \
     wget https://jdbc.postgresql.org/download/postgresql-42.6.0.jar -P lib/
@@ -11,11 +11,13 @@ COPY scripts/* webapps/camunda/app/cockpit/scripts/
 COPY scripts2/* webapps/camunda/app/tasklist/scripts/
 
 # Custom process engine plugins
+RUN wget https://repo1.maven.org/maven2/redis/clients/jedis/3.10.0/jedis-3.10.0.jar -P lib/ && \
+    wget https://repo1.maven.org/maven2/org/jsoup/jsoup/1.16.1/jsoup-1.16.1.jar -P lib/
 COPY plugins/* lib/
 
 # session management
-RUN wget https://repo1.maven.org/maven2/org/redisson/redisson-tomcat-9/3.20.1/redisson-tomcat-9-3.20.1.jar -P lib/ && \
-    wget https://repo1.maven.org/maven2/org/redisson/redisson-all/3.20.1/redisson-all-3.20.1.jar -P lib/
+RUN wget https://repo1.maven.org/maven2/org/redisson/redisson-tomcat-9/3.24.1/redisson-tomcat-9-3.24.1.jar -P lib/ && \
+    wget https://repo1.maven.org/maven2/org/redisson/redisson-all/3.24.1/redisson-all-3.24.1.jar -P lib/
 COPY redisson.conf conf/
 COPY context.xml  webapps/camunda/META-INF/
 COPY context.xml  webapps/camunda-welcome/META-INF/

@@ -12,12 +12,12 @@
   <name>Camunda Process End engine plugin</name>
 
   <properties>
-      <version.camunda-bpm>7.19.0</version.camunda-bpm>
+      <version.camunda-bpm>7.20.0</version.camunda-bpm>
       <version.h2>2.1.214</version.h2>
-      <version.java>11.0.18</version.java>
+      <version.java>17.0.8</version.java>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <maven.compiler.source>11</maven.compiler.source>
-      <maven.compiler.target>11</maven.compiler.target>
+      <maven.compiler.source>17</maven.compiler.source>
+      <maven.compiler.target>17</maven.compiler.target>
   </properties>
 
   <dependencyManagement>
@@ -28,11 +28,6 @@
                 <type>pom</type>
                 <scope>import</scope>
                 <version>${version.camunda-bpm}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.camunda.bpm.extension</groupId>
-                <artifactId>camunda-bpm-assert</artifactId>
-                <version>15.0.0</version>
             </dependency>
         </dependencies>
   </dependencyManagement>
@@ -46,13 +41,13 @@
     <dependency>
        <groupId>org.jsoup</groupId>
        <artifactId>jsoup</artifactId>
-       <version>1.15.3</version>
+       <version>1.16.1</version>
        <scope>provided</scope>
     </dependency>
     <dependency>
        <groupId>redis.clients</groupId>
        <artifactId>jedis</artifactId>
-       <version>3.9.0</version>
+       <version>3.10.0</version>
        <scope>provided</scope>
     </dependency>
     <dependency>
