@@ -1,8 +1,8 @@
-FROM node:18.12.1-bullseye-slim
+FROM node:20.8.1-bookworm-slim
 
 RUN mkdir -p /app
 COPY ./package.json /app/package.json
 RUN cd /app && npm install --omit=dev
 ENV NODE_PATH=/app/node_modules
 
-ENTRYPOINT ["node", "/app/server.js"]
+ENTRYPOINT ["node", "--env-file=/app/.env", "/app/server.js"]

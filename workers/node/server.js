@@ -1,6 +1,5 @@
 'use strict';
 
-require('dotenv').config({path: '/app/.env'});
 const { Client, logger, BasicAuthInterceptor } = require('camunda-external-task-client-js');
 // const fs = require('fs');
 const { Worker } = require ('./js/worker.js');
