@@ -89,6 +89,8 @@ const ServiceRules = [
   { custom: true, method: 'table.Read', rules: 'table', resultReturn: 'data', useRedisCache: true},
   // Read data from redis cache and return native json data
   { custom: true, method: 'cache.Read', rules: 'data,conversion', resultReturn: 'data'},
+  // Write data to redis cache to a key
+  { custom: true, method: 'cache.Write', rules: 'data,key'},
   // write array of data tables to excel file
   { custom: true, method: 'excel.Create', rules: 'sheets,data', resultReturn: 'data', useRedisCache: true},
 
@@ -463,6 +465,11 @@ async function executeCustomRequest (service, callback) {
       callback (service, {result: {data: data}});
       return;
     }
+    if (service.method == 'cache.Write') {
+      await cacheWrite(service);
+      callback (service, {result: {}});
+      return;
+    }
     if (service.method == 'excel.Create') {
       let data = await excelCreate(service, service.params.sheets, service.params.data);
       callback (service, {result: {data: data}});
@@ -570,6 +577,24 @@ async function cacheRead (service) {
     data = JSON.parse(data);
   }
   return data;
+}
+
+// Write data to redis cache
+async function cacheWrite (service) {
+  let data = service.params.data;
+  if (data.startsWith('redis:')) {
+    let key = data.substring(6);
+    data = await service.redis.getAsync (key);
+    if (typeof data == 'string') {
+      data = JSON.parse(data);
+    }
+  }
+  let key = service.params.key;
+  let ttl = redisCacheHours * 3600;
+  if (service.params.ttl) {
+    ttl = service.params.ttl;
+  }
+  await service.redis.setAsync(key, JSON.stringify(data), ttl);
 }
 
 // encrypt text with a key and secret

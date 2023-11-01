@@ -9,6 +9,7 @@ Internal service has many systemwide methods to support business processes:
 [**table.Count**](#tablecount) - Returns number of rows in temp table   
 [**table.Read**](#tableread) - Read and save in cache all records of temp table as one object, return link to object in cache   
 [**cache.Read**](#cacheread) - Read data from cache to use data as camunda variable   
+[**cache.Write**](#cachewrite) - Write data to cache   
 
 [**excel.Create**](#excelcreate) - Create Excel xlsx file from data in many temp tables   
 
@@ -70,6 +71,14 @@ data - link to redis cache object
 conversion - can be "base64,json", "base64", "json". "base64" used if data stored as base64 binary data to decode it while reading. "json" used to convert json object to native json camunda variable   
 Output parameters:   
 data - data as object from cache   
+
+### cache.Write
+Method writes data to redis cache   
+Input parameters:   
+data - input data or link to redis cache object   
+key - cache key to save data   
+ttl (opt) - time to expire cache data   
+Output parameters: none   
 
 ### excel.Create
 Method creates/generates xlsx file from data objects and saves result file in redis cache   
