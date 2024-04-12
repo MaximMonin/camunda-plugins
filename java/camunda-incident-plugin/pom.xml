@@ -12,9 +12,9 @@
   <name>Camunda Incident Process engine plugin</name>
 
   <properties>
-      <version.camunda-bpm>7.20.0</version.camunda-bpm>
+      <version.camunda-bpm>7.21.0</version.camunda-bpm>
       <version.h2>2.1.214</version.h2>
-      <version.java>17.0.8</version.java>
+      <version.java>17.0.10</version.java>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <maven.compiler.source>17</maven.compiler.source>
       <maven.compiler.target>17</maven.compiler.target>
