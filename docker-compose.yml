@@ -1,6 +1,6 @@
 services:
   camunda-nginx:
-    image: nginx:1.24.0
+    image: nginx:1.26.0
     restart: always
     container_name: camunda-plugins-gateway-$ENVIRONMENT
     hostname: 'camunda-gateway'
@@ -173,7 +173,7 @@ services:
       - POSTGRES_PASSWORD=postgres
 
   pgadmin-nginx:
-    image: nginx:1.24.0
+    image: nginx:1.26.0
     restart: always
     container_name: camunda-plugins-nginx2-$ENVIRONMENT
     depends_on:
