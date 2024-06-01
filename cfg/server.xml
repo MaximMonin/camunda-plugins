@@ -84,7 +84,7 @@
     -->
     <Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
                maxThreads="150" SSLEnabled="true" scheme="https" secure="true"
-               keystoreFile="/camunda/conf/camunda.p12" keystorePass="camunda"
+               keystoreFile="/camunda/conf/camunda.p12" keystorePass=""
                clientAuth="false" sslProtocol="TLS" sessionTimeout="0">
     </Connector>
     <!-- Define an SSL/TLS HTTP/1.1 Connector on port 8443 with HTTP/2

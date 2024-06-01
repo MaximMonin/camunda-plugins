@@ -159,38 +159,28 @@ class InternalServiceCore {
     }
 
     for(let i=0; i < ServiceRules.length; i++) {
-      if (ServiceRules[i].method == method && ServiceRules[i].ignoreErrors) {
-        this.ignoreErrors = ServiceRules[i].ignoreErrors;
-      }
-    }
-    for(let i=0; i < ServiceRules.length; i++) {
-      if (ServiceRules[i].method == method && ServiceRules[i].resultReturn) {
-        this.resultReturn = ServiceRules[i].resultReturn;
-      }
-    }
-    for(let i=0; i < ServiceRules.length; i++) {
-      if (ServiceRules[i].method == method && ServiceRules[i].useRedisCache) {
-        this.useRedisCache = ServiceRules[i].useRedisCache;
-      }
-    }
-    for(let i=0; i < ServiceRules.length; i++) {
-      if (ServiceRules[i].method == method && ServiceRules[i].timeout) {
-        this.timeout = ServiceRules[i].timeout;
-      }
-    }
-    for(let i=0; i < ServiceRules.length; i++) {
-      if (ServiceRules[i].method == method && ServiceRules[i].url) {
-        this.url = ServiceRules[i].url;
-      }
-    }
-    for(let i=0; i < ServiceRules.length; i++) {
-      if (ServiceRules[i].method == method && ServiceRules[i].timeoutRepeat === false) {
-        this.timeoutRepeat = ServiceRules[i].timeoutRepeat;
-      }
-    }
-    for(let i=0; i < ServiceRules.length; i++) {
-      if (ServiceRules[i].method == method && ServiceRules[i].custom) {
-        this.custom = ServiceRules[i].custom;
+      if (ServiceRules[i].method == method){
+        if (ServiceRules[i].ignoreErrors) {
+          this.ignoreErrors = ServiceRules[i].ignoreErrors;
+        }
+        if (ServiceRules[i].resultReturn) {
+          this.resultReturn = ServiceRules[i].resultReturn;
+        }
+        if (ServiceRules[i].useRedisCache) {
+          this.useRedisCache = ServiceRules[i].useRedisCache;
+        }
+        if (ServiceRules[i].timeout) {
+          this.timeout = ServiceRules[i].timeout;
+        }
+        if (ServiceRules[i].url) {
+          this.url = ServiceRules[i].url;
+        }
+        if (ServiceRules[i].timeoutRepeat === false) {
+          this.timeoutRepeat = ServiceRules[i].timeoutRepeat;
+        }
+        if (ServiceRules[i].custom) {
+          this.custom = ServiceRules[i].custom;
+        }
       }
     }
 
