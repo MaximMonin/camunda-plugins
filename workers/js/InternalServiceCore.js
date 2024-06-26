@@ -55,6 +55,7 @@ const ignorePrivate = format((info) => {
   return info;
 });
 
+const consoleLogFormat = format.printf(info => `${info.level} ${info.timestamp} ${JSON.stringify(info.message || {})}`);
 const logger = createLogger({
   level: 'info',
   format: format.combine(
@@ -64,7 +65,12 @@ const logger = createLogger({
   ),
   defaultMeta: { service: 'InternalService' },
   transports: [
-    new transports.Console(),
+    new transports.Console({
+      format: format.combine(
+        format.colorize(),
+        consoleLogFormat
+      )
+    }),
     transport,
     transportErr,
   ],
