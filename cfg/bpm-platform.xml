@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <bpm-platform xmlns="http://www.camunda.org/schema/1.0/BpmPlatform" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.camunda.org/schema/1.0/BpmPlatform http://www.camunda.org/schema/1.0/BpmPlatform ">
 
@@ -34,10 +35,7 @@
       <property name="jobExecutorAcquireByPriority">false</property>
       <property name="jobExecutorPreferTimerJobs">false</property>
       <property name="jobExecutorAcquireByDueDate">false</property>
-      <property name="commandRetries">3</property>
       <property name="tenantCheckEnabled">false</property>
-      <property name="initializeTelemetry">false</property>
-      <property name="telemetryReporterActivate">false</property>
       <property name="historyCleanupEnabled">true</property>
       <property name="historyCleanupStrategy">removalTimeBased</property>
       <property name="historyCleanupBatchWindowStartTime">00:01</property>

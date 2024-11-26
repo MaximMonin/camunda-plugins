@@ -1,5 +1,5 @@
 /db/*
-/redis/*
+/valkey/*
 /logs/*
 /tmp/*
 /cfg/ssl/*
