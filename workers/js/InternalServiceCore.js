@@ -599,7 +599,11 @@ async function cacheWrite (service) {
     let key = data.substring(6);
     data = await service.redis.getAsync (key);
     if (typeof data == 'string') {
-      data = JSON.parse(data);
+      try {
+        let tempdata = JSON.parse(data);
+        data = tempdata;
+      }
+      catch {}
     }
   }
   let key = service.params.key;
@@ -607,7 +611,11 @@ async function cacheWrite (service) {
   if (service.params.ttl) {
     ttl = service.params.ttl;
   }
-  await service.redis.setAsync(key, JSON.stringify(data), ttl);
+  if (typeof data != 'string') {
+    await service.redis.setAsync(key, JSON.stringify(data), ttl);
+  } else {
+    await service.redis.setAsync(key, data, ttl);
+  }
 }
 
 // encrypt text with a key and secret
