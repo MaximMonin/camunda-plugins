@@ -569,7 +569,7 @@ async function tableRead (service) {
 // Read data from redis cache and return data object
 async function cacheRead (service) {
   let data = service.params.data;
-  if (data.startsWith('redis:')) {
+  if (typeof data == 'string' && data.startsWith('redis:')) {
     let key = data.substring(6);
     data = await service.redis.getAsync (key);
   }
@@ -585,7 +585,7 @@ async function cacheRead (service) {
 // Read data from redis cache and return if data object exists
 async function cacheExists (service) {
   let data = service.params.data;
-  if (data.startsWith('redis:')) {
+  if (typeof data == 'string' && data.startsWith('redis:')) {
     let key = data.substring(6);
     data = await service.redis.getAsync (key);
   }
@@ -595,7 +595,7 @@ async function cacheExists (service) {
 // Write data to redis cache
 async function cacheWrite (service) {
   let data = service.params.data;
-  if (data.startsWith('redis:')) {
+  if (typeof data == 'string' && data.startsWith('redis:')) {
     let key = data.substring(6);
     data = await service.redis.getAsync (key);
     if (typeof data == 'string') {
@@ -621,7 +621,7 @@ async function cacheWrite (service) {
 // encrypt text with a key and secret
 async function encryptText (service) {
   let data = service.params.text;
-  if (data.startsWith('redis:')) {
+  if (typeof data == 'string' && data.startsWith('redis:')) {
     let key = data.substring(6);
     data = await service.redis.getAsync (key);
   }
@@ -632,7 +632,7 @@ async function encryptText (service) {
 // decrypt text with a key and secret
 async function decryptText (service) {
   let data = service.params.text;
-  if (data.startsWith('redis:')) {
+  if (typeof data == 'string' && data.startsWith('redis:')) {
     let key = data.substring(6);
     data = await service.redis.getAsync (key);
   }
@@ -643,7 +643,7 @@ async function decryptText (service) {
 // extract certificate data from certificate
 async function getCertificateData (service) {
   let data = service.params.certificate;
-  if (data.startsWith('redis:')) {
+  if (typeof data == 'string' && data.startsWith('redis:')) {
     let key = data.substring(6);
     data = await service.redis.getAsync (key);
   }
@@ -688,7 +688,7 @@ async function email (service, callback) {
   if (service.params.attachments) {
     for (let j=0; j < service.params.attachments.length; j++) {
       let attachment = service.params.attachments[j];
-      if (attachment.content && attachment.content.startsWith('redis:')) {
+      if (attachment.content && typeof attachment.content == 'string' && attachment.content.startsWith('redis:')) {
         attachment.content = await service.redis.getAsync (attachment.content.substring(6));
         attachment['encoding'] = 'base64';
       }
