@@ -16,6 +16,7 @@ Internal service has many systemwide methods to support business processes:
 
 [**null**](#null) - Do nothing, special method used in tests   
 [**file.Remove**](#fileremove) - Remove local file   
+[**file.Read**](#fileread) - Read local file to base64 variable   
 [**environment.Get**](#environmentget) - Return environment (production, stage, development)   
 [**processes.StopOther**](#processesstopother) - Stop all other processes except of current process (kill other of this type)   
 
@@ -49,7 +50,7 @@ Method adds some data rows to temp table. Data saved as redis list of objects
 Input parameters:   
 table - name of temp-table to add rows   
 data - array of objects to add to temp-table   
-Output parameters: none
+Output parameters: none   
 
 ### table.Count
 Method return number of rows in temp-table added by table.AddRows method   
@@ -111,8 +112,14 @@ Output parameters: none
 ### file.Remove
 Method used to remove local file   
 Input parameters:   
-file - file name...
+file - file name   
 Output parameters: none   
+
+### file.Read
+Method used to read local file to variable   
+Input parameters:   
+file - file name   
+Output parameters: data - file content in base64 form (ordinary redis-cached)   
 
 ### environment.Get
 Method used to return current environment data   

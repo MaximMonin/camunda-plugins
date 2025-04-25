@@ -81,6 +81,8 @@ const ServiceRules = [
   { custom: true, method: 'null', rules: ''},
   // Remove local file
   { custom: true, method: 'file.Remove', rules: 'file', ignoreErrors: ['no such file or directory']},
+  // Read local file
+  { custom: true, method: 'file.Read', rules: 'file', resultReturn: 'data', useRedisCache: true},
 
   // Special methods for locking and unlocking resource
   // Queries to redis cluster
@@ -436,6 +438,11 @@ async function executeCustomRequest (service, callback) {
     if (service.method == 'file.Remove') {
       fs.unlinkSync(service.params.file);
       callback (service, {result: {}});
+      return;
+    }
+    if (service.method == 'file.Read') {
+      let data = fs.readFileSync(service.params.file);
+      callback (service, {result: {data: data.toString('base64')}});
       return;
     }
     if (service.method == 'table.AddRows') {
