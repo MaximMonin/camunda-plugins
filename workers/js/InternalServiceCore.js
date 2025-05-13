@@ -558,6 +558,19 @@ async function tableAddRows (service) {
         data = JSON.parse(data);
       }
     }
+    // some of data fields can be cached
+    if (service.params.cachedFields) {
+      for (let j=0; j<service.params.cachedFields.length; j++) {
+        let field = service.params.cachedFields[j];
+        if (typeof data[field] == 'string' && data[field].startsWith('redis:')) {
+          let key = data[field].substring(6);
+          data[field] = await service.redis.getAsync(key);
+          if (typeof data[field] == 'string') {
+            data[field] = JSON.parse(data[field]);
+          }
+        }
+      }
+    }
     await service.redis.rpushAsync(service.params.table, JSON.stringify(data));
   }
   await service.redis.expireAsync(service.params.table, redisCacheHours * 3600);

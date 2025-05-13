@@ -50,6 +50,7 @@ Method adds some data rows to temp table. Data saved as redis list of objects
 Input parameters:   
 table - name of temp-table to add rows   
 data - array of objects to add to temp-table   
+cachedFields (opt) - array of data object fields to retrieve value from cache   
 Output parameters: none   
 
 ### table.Count
