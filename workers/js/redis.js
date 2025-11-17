@@ -113,6 +113,10 @@ class Redis {
 		this.multiClient.expire(list, timeout, callback);
   }
   expireAsync = promisify(this.expire).bind(this);
+  del(key, callback) {
+    this.multiClient.del(key, callback);
+  }
+  delAsync = promisify(this.del).bind(this);
 
   stop () {
     for (var i = 0; i < this.redisServers.length; i++)

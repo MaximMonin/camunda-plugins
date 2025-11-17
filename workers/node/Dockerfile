@@ -1,4 +1,4 @@
-FROM node:22.11.0-bookworm-slim
+FROM node:24.11.0-trixie-slim
 
 RUN mkdir -p /app
 COPY ./package.json /app/package.json

@@ -35,6 +35,7 @@
       <property name="jobExecutorAcquireByPriority">false</property>
       <property name="jobExecutorPreferTimerJobs">false</property>
       <property name="jobExecutorAcquireByDueDate">false</property>
+      <property name="legacyJobRetryBehaviorEnabled">true</property>
       <property name="tenantCheckEnabled">false</property>
       <property name="historyCleanupEnabled">true</property>
       <property name="historyCleanupStrategy">removalTimeBased</property>

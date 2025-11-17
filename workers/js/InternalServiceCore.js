@@ -101,6 +101,8 @@ const ServiceRules = [
   { custom: true, method: 'cache.Exists', rules: 'data', resultReturn: 'data'},
   // Write data to redis cache to a key
   { custom: true, method: 'cache.Write', rules: 'data,key'},
+  // Delete data from redis cache
+  { custom: true, method: 'cache.Delete', rules: 'keys'},
   // write array of data tables to excel file
   { custom: true, method: 'excel.Create', rules: 'sheets,data', resultReturn: 'data', useRedisCache: true},
 
@@ -419,7 +421,7 @@ class InternalServiceCore {
         retries = service.task.retries - 1;
       }
       // max 3 attempts repeating request timeout
-      if (service.timeoutRepeat && typeof errdata == 'string' && errdata.includes('Service request timeout:') && retries > 0 ) {
+      if (service.timeoutRepeat && typeof errdata == 'string' && (errdata.includes('Service request timeout:') || errdata.includes('socket hang up')) && retries > 0 ) {
         callback (service, {timeout: {message: 'Repeat again (timeout occurs)', retries: retries }});
         return;
       }
@@ -477,6 +479,11 @@ async function executeCustomRequest (service, callback) {
     }
     if (service.method == 'cache.Write') {
       await cacheWrite(service);
+      callback (service, {result: {}});
+      return;
+    }
+    if (service.method == 'cache.Delete') {
+      await cacheDelete(service);
       callback (service, {result: {}});
       return;
     }
@@ -638,6 +645,21 @@ async function cacheWrite (service) {
   }
 }
 
+async function cacheDelete (service) {
+  let keys = service.params.keys;
+  for (let i=0; i<keys.length; i++) {
+    let key = keys[i];
+    if (typeof key == 'string' && key.startsWith('redis:')) {
+      key = key.substring(6);
+    }
+    if (key == "") {
+      continue;
+    }
+
+    await service.redis.delAsync(key);
+  }
+}
+
 // encrypt text with a key and secret
 async function encryptText (service) {
   let data = service.params.text;
@@ -687,6 +709,7 @@ function genPassword (len) {
 // join chunk arrays into single array
 async function joinChunks (service) {
   let chunks = service.params.chunks;
+  let deleteSourceChunks = service.params.deleteSourceChunks;
   let result = [];
   for (let i=0; i < chunks.length; i++) {
     let item = chunks[i];
@@ -699,6 +722,20 @@ async function joinChunks (service) {
       result.push(item[j]);
     }
   }
+  if (deleteSourceChunks === true) {
+    for (let i=0; i < chunks.length; i++) {
+      let item = chunks[i];
+      if (typeof item == 'string' && item.startsWith('redis:')) {
+        let key = item.substring(6);
+        if (key == "") {
+          continue;
+        }
+
+        await service.redis.delAsync(key);
+      }
+    }
+  }
+
   return result;
 }
 
