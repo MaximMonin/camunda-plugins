@@ -11,6 +11,7 @@ Internal service has many systemwide methods to support business processes:
 [**cache.Read**](#cacheread) - Read data from cache to use data as camunda variable   
 [**cache.Exists**](#cacheexists) - Read data from cache and returns bool value if cache value exists   
 [**cache.Write**](#cachewrite) - Write data to cache   
+[**cache.Delete**](#cachedelete) - Delete keys from cache   
 
 [**excel.Create**](#excelcreate) - Create Excel xlsx file from data in many temp tables   
 
@@ -88,6 +89,12 @@ Input parameters:
 data - input data or link to redis cache object   
 key - cache key to save data   
 ttl (opt) - time to expire cache data   
+Output parameters: none   
+
+### cache.Delete
+Method deletes keys from cache   
+Input parameters:   
+keys - array of redis keys   
 Output parameters: none   
 
 ### excel.Create
@@ -213,5 +220,6 @@ data - certificate data object including validTo, subject, issuer, etc. Error re
 Method used to Join chunks into single array   
 Input parameters:   
 chunks - array of chunks, chunk can be redis cache array   
+deleteSourceChunks (true) (opt) - delete source redis cache chunks after joining.   
 Output paremeters:   
 data - new array joined from source chunks into single array   
